@@ -258,7 +258,6 @@ export async function run(
 ): Promise<PlanState>
 ```
 
-
 ---
 
 ## README Outline
@@ -311,6 +310,7 @@ The README must be a complete, working guide. A consumer should be able to read 
    - `dependencies`: `{ "@helentherobot/runner": "^0.3.5", "ai": "..." }` — `runner` provides `Recipe` and runner types; `ai` version TBD from runner's package.json, needed for `ToolSet` in `src/tools.ts`.
 
 2. Create `tsconfig.json`:
+
    ```json
    {
      "compilerOptions": {
@@ -331,6 +331,7 @@ The README must be a complete, working guide. A consumer should be able to read 
    ```
 
 3. Create `vitest.config.ts` with `@` alias pointing to `./src`:
+
    ```ts
    import { defineConfig } from 'vitest/config'
    import path from 'path'
@@ -352,17 +353,20 @@ The README must be a complete, working guide. A consumer should be able to read 
 
 6. Create `.editorconfig` — copy from runner exactly.
 
-8. Create `src/index.ts`: `export {}`
+7. Create `src/index.ts`: `export {}`
 
-9. Create `tests/index.test.ts`:
+8. Create `tests/index.test.ts`:
+
    ```ts
    import { describe, it } from 'vitest'
-   describe('placeholder', () => { it('passes', () => {}) })
+   describe('placeholder', () => {
+     it('passes', () => {})
+   })
    ```
 
-10. Run `npm install`.
+9. Run `npm install`.
 
-11. Run `npm run check` — must pass cleanly.
+10. Run `npm run check` — must pass cleanly.
 
 **Tests**: Placeholder test + typecheck + format check all pass.
 
@@ -467,6 +471,7 @@ The README must be a complete, working guide. A consumer should be able to read 
 **Steps**:
 
 1. Create `src/adapters.ts` — `Adapters` interface:
+
    ```ts
    export interface Adapters {
      tools: Tools
@@ -499,7 +504,12 @@ function updatePhase(store: Store, index: number, update: Partial<PhaseState>): 
   store.write(state)
 }
 
-function updateControl(store: Store, phaseIndex: number, name: string, update: Partial<ControlState>): void {
+function updateControl(
+  store: Store,
+  phaseIndex: number,
+  name: string,
+  update: Partial<ControlState>,
+): void {
   const state = store.read() ?? createDefaultState()
   const phase = state.phases[phaseIndex]
   phase.controls[name] = { ...(phase.controls[name] ?? { dismissed: [], raised: [] }), ...update }
@@ -509,27 +519,27 @@ function updateControl(store: Store, phaseIndex: number, name: string, update: P
 
 Consumers only implement `read` and `write` — they never see the per-phase or per-control granularity.
 
-**No clobbering risk**: task handlers execute sequentially from `remainingTasks`. Parallelism only exists *within* a single handler (e.g. `handleCheckPhase` fires all control recipes with `Promise.all`). The handler waits for all results, then performs a single merged state write before returning. Two handlers never write simultaneously.
+**No clobbering risk**: task handlers execute sequentially from `remainingTasks`. Parallelism only exists _within_ a single handler (e.g. `handleCheckPhase` fires all control recipes with `Promise.all`). The handler waits for all results, then performs a single merged state write before returning. Two handlers never write simultaneously.
 
 ### Built-in task types
 
 `Task.type` mirrors the handler name exactly. Built-in tasks queued by `run()`:
 
-| `type` | `phase` | When queued |
-|---|---|---|
-| `synthesize-phases` | — | Start of run |
-| `normalize-phase-prompt` | ✓ | After phase list is built |
-| `plan-phase` | ✓ | After prompt is normalised |
-| `normalize-phase-plan` | ✓ | After agent writes the plan |
-| `index-phase` | ✓ | After plan is normalised |
-| `split-phase` | ✓ | After index is built |
-| `check-phase` | ✓ | After split (or after revise) |
-| `investigate-phase` | ✓ | After check finds issues |
-| `revise-phase` | ✓ | After investigation confirms problems |
-| `collect-feedback` | ✓ | After investigate/revise cycle |
-| `reorder-phases` | — | After all phases complete |
-| `cleanup` | — | After reorder |
-| `commit-phase` | ✓ | When a phase is finalised |
+| `type`                   | `phase` | When queued                           |
+| ------------------------ | ------- | ------------------------------------- |
+| `synthesize-phases`      | —       | Start of run                          |
+| `normalize-phase-prompt` | ✓       | After phase list is built             |
+| `plan-phase`             | ✓       | After prompt is normalised            |
+| `normalize-phase-plan`   | ✓       | After agent writes the plan           |
+| `index-phase`            | ✓       | After plan is normalised              |
+| `split-phase`            | ✓       | After index is built                  |
+| `check-phase`            | ✓       | After split (or after revise)         |
+| `investigate-phase`      | ✓       | After check finds issues              |
+| `revise-phase`           | ✓       | After investigation confirms problems |
+| `collect-feedback`       | ✓       | After investigate/revise cycle        |
+| `reorder-phases`         | —       | After all phases complete             |
+| `cleanup`                | —       | After reorder                         |
+| `commit-phase`           | ✓       | When a phase is finalised             |
 
 Consumers can add their own task types — `run()` will dispatch unknown types to an optional `onUnknownTask` hook (TBD) or ignore them.
 
@@ -537,12 +547,12 @@ Consumers can add their own task types — `run()` will dispatch unknown types t
 
 `run()` creates a set of specialist tools internally (not exported) and passes them to every spawned agent alongside `adapters.tools.agentTools`. These are closures over `adapters.store`:
 
-| Tool | Args | What it does |
-|---|---|---|
-| `__plan_write_recon` | `(content: string)` | Sets `state.recon` via the store |
-| `__plan_read_recon` | `()` | Returns `state.recon` |
+| Tool                 | Args                               | What it does                             |
+| -------------------- | ---------------------------------- | ---------------------------------------- |
+| `__plan_write_recon` | `(content: string)`                | Sets `state.recon` via the store         |
+| `__plan_read_recon`  | `()`                               | Returns `state.recon`                    |
 | `__plan_write_phase` | `(phase: number, content: string)` | Sets `phases[phase].brief` via the store |
-| `__plan_read_phase` | `(phase: number)` | Returns `phases[phase].brief` |
+| `__plan_read_phase`  | `(phase: number)`                  | Returns `phases[phase].brief`            |
 
 Agents reference these by their exact `__plan_*` names in prompts — they are the only tools the package names explicitly. The `__plan_` prefix prevents collisions with consumer-provided `agentTools`, which are referenced generically.
 
@@ -675,6 +685,7 @@ Evaluations run against real model profiles and are excluded from CI. They live 
 Exports three things:
 
 **1. Profiles** — runner configs for each model to evaluate against:
+
 ```ts
 /** Runner configs keyed by profile name (e.g. 'sonnet', 'haiku', 'gpt4o-mini'). */
 export const profiles: Record<string, RunnerConfig> = {}
@@ -745,6 +756,7 @@ Each recipe eval runs all scenarios for its control and prints actual output alo
 One file per recipe. Each runs the recipe against a real profile and prints the raw output. Used to eyeball quality in isolation.
 
 Files:
+
 - `synthesize-phases.ts`
 - `plan-phase.ts`
 - `normalize-phase-plan.ts`
@@ -829,3 +841,17 @@ Runs the same prompt through multiple profiles and outputs a side-by-side compar
 
 - Planned four phases: scaffold, types, core extraction, Adapters wiring.
 - Confirmed zero host-application dependencies in any file being included.
+
+## Progress
+
+### Completed
+
+- Phase 1 — Scaffold the package
+
+### In Progress
+
+### To Do
+
+- Phase 2 — Types
+- Phase 3 — Interfaces and orchestrator core
+- Phase 4 — Adapters interface and wiring
