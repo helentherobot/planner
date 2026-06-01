@@ -847,11 +847,11 @@ Runs the same prompt through multiple profiles and outputs a side-by-side compar
 ### Completed
 
 - Phase 1 — Scaffold the package
+- Phase 2 — Types
 
 ### In Progress
 
 ### To Do
 
-- Phase 2 — Types
 - Phase 3 — Interfaces and orchestrator core
 - Phase 4 — Adapters interface and wiring
