@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Eval state
+.eval-state/
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code
+.claude/settings.local.json

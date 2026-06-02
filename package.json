@@ -1,0 +1,46 @@
+{
+  "name": "@helentherobot/planner",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "node --env-file .env node_modules/.bin/vitest run --config vitest.smoke.config.ts",
+    "check": "concurrently 'tsc --noEmit' 'npm run format:check' 'npm run test'",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "eval:recipes": "tsx evaluations/recipes/run-all.ts",
+    "eval:recipe": "tsx evaluations/recipes/run.ts",
+    "eval:e2e": "tsx evaluations/e2e/plan.ts",
+    "eval:compare": "tsx evaluations/e2e/compare-profiles.ts"
+  },
+  "peerDependencies": {
+    "@helentherobot/runner": "^0.3.6",
+    "ai": ">=6.0.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 100,
+    "trailingComma": "all"
+  },
+  "devDependencies": {
+    "@types/json-schema": "7.0.15",
+    "@types/node": "25.9.1",
+    "@vitest/coverage-v8": "4.1.7",
+    "concurrently": "10.0.0",
+    "prettier": "3.8.3",
+    "tsx": "4.22.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.7"
+  }
+}
