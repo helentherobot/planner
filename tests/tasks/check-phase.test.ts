@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handleCheckPhase } from '@/tasks/check-phase.js'
 import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/adapters.js'
-import type { QualityControl } from '@/checks.js'
-import type { Store } from '@/store.js'
+import type { Adapters } from '@/types.js'
+import type { QualityControl } from '@/types.js'
+import type { Store } from '@/types.js'
 
 function makePhaseState(overrides: Partial<PhaseState> = {}): PhaseState {
   return {
@@ -23,7 +23,6 @@ function makeState(phases: PhaseState[], remaining: Task[] = []): PlanState {
     completedAt: null,
     currentTask: null,
     progressHandle: null,
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
     phases,
     remainingTasks: remaining,
     completedTasks: [],
@@ -61,12 +60,15 @@ describe('handleCheckPhase', () => {
     const runner = {
       run: vi.fn(async () => {
         callCount++
-        return { text: '- Some issue', usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 } }
+        return {
+          text: JSON.stringify({ findings: [{ path: 'some step', reason: 'too vague' }] }),
+          usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 },
+        }
       }),
     } as unknown as Adapters['tools']['runner']
 
     const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', agentTools: {} },
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
@@ -92,13 +94,13 @@ describe('handleCheckPhase', () => {
 
     const runner = {
       run: vi.fn(async () => ({
-        text: '(clean)',
+        text: JSON.stringify({ findings: [] }),
         usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 },
       })),
     } as unknown as Adapters['tools']['runner']
 
     const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', agentTools: {} },
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },

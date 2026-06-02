@@ -9,7 +9,10 @@
     "declarationMap": true,
     "ignoreDeprecations": "6.0",
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["tests/**/*"]

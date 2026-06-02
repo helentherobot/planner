@@ -1,5 +1,5 @@
-import type { Task, PlanState } from '../types.js'
-import type { Adapters } from '../adapters.js'
+import type { Task, PlanState } from '@/types.js'
+import type { Adapters } from '@/types.js'
 
 export async function handleCleanup(
   _task: Task,

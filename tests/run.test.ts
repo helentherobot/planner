@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { run } from '@/run.js'
 import type { PlanState, Task } from '@/types.js'
-import type { Adapters } from '@/adapters.js'
-import type { Store } from '@/store.js'
-import type { Observer } from '@/observer.js'
+import type { Adapters } from '@/types.js'
+import type { Store } from '@/types.js'
+import type { Observer } from '@/types.js'
 
 function makeState(overrides: Partial<PlanState> = {}): PlanState {
   return {
@@ -42,7 +42,7 @@ function makeAdapters(storeState: PlanState): Adapters {
       runner: {} as Adapters['tools']['runner'],
       profile: 'haiku',
       cwd: '/tmp',
-      agentTools: {},
+      tools: [],
     },
     store,
     observer,

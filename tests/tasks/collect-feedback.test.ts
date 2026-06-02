@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handleCollectFeedback } from '@/tasks/collect-feedback.js'
 import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/adapters.js'
-import type { QualityControl } from '@/checks.js'
-import type { Store } from '@/store.js'
+import type { Adapters } from '@/types.js'
+import type { QualityControl } from '@/types.js'
+import type { Store } from '@/types.js'
 
 function makePhaseState(overrides: Partial<PhaseState> = {}): PhaseState {
   return {
@@ -23,7 +23,6 @@ function makeState(phases: PhaseState[], remaining: Task[] = []): PlanState {
     completedAt: null,
     currentTask: null,
     progressHandle: null,
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
     phases,
     remainingTasks: remaining,
     completedTasks: [],
@@ -46,12 +45,12 @@ function makeAdapters(state: PlanState, controls: QualityControl[] = []): Adapte
       runner: {} as Adapters['tools']['runner'],
       profile: 'haiku',
       cwd: '/tmp',
-      agentTools: {},
+      tools: [],
     },
     store: makeStore(state),
     observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-    config: state.config,
     controls,
+    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
   }
 }
 
@@ -72,6 +71,7 @@ describe('handleCollectFeedback', () => {
     const phase = makePhaseState({ iterations: 0 })
     const state = makeState([phase])
     const adapters = makeAdapters(state)
+    adapters.config.minimumIterations = 2
 
     const result = await handleCollectFeedback(task, state, adapters)
 

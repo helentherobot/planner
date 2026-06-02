@@ -1,22 +1,23 @@
 import type { Recipe } from '@helentherobot/runner'
-import type { ControlRecipeContext } from '../checks.js'
+import type { ControlRecipeContext } from '@/types.js'
 
 export const checkPhaseScope: Recipe<[ControlRecipeContext]> = {
-  profile: 'haiku',
+  profile: '',
   prompt: ({ phaseState, controlState }) => {
     const cleared =
       controlState.dismissed.length > 0
-        ? `\nPreviously reviewed and cleared — do not re-flag:\n${controlState.dismissed.join('\n')}`
+        ? `CLEARED ITEMS — do not flag these:\n${controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')}\n\n`
         : ''
 
     const authorisedFiles = phaseState.index
       ? `\nAuthorised files for this phase:\n${phaseState.index}`
       : ''
 
-    return `Review this phase plan for files that appear to be out of scope:
+    return `${cleared}Review this phase plan for files that appear to be out of scope. Do not flag cleared items.
 
-${phaseState.brief}${authorisedFiles}${cleared}
+Plan:
+${phaseState.brief}${authorisedFiles}
 
-Return either "(clean)" or a bullet list of out-of-scope files with a brief reason for each.`
+Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<file path only, no explanation>", "reason": "<why it is out of scope>" }] }. Output only the JSON.`
   },
 }

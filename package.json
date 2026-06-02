@@ -17,11 +17,15 @@
     "test:smoke": "node --env-file .env node_modules/.bin/vitest run --config vitest.smoke.config.ts",
     "check": "concurrently 'tsc --noEmit' 'npm run format:check' 'npm run test'",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "eval:recipes": "tsx evaluations/recipes/run-all.ts",
+    "eval:recipe": "tsx evaluations/recipes/run.ts",
+    "eval:e2e": "tsx evaluations/e2e/plan.ts",
+    "eval:compare": "tsx evaluations/e2e/compare-profiles.ts"
   },
-  "dependencies": {
-    "@helentherobot/runner": "^0.3.5",
-    "ai": "6.0.191"
+  "peerDependencies": {
+    "@helentherobot/runner": "^0.3.6",
+    "ai": ">=6.0.0"
   },
   "prettier": {
     "semi": false,

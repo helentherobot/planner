@@ -1,8 +1,8 @@
 import type { Recipe } from '@helentherobot/runner'
-import type { PhaseState } from '../types.js'
+import type { PhaseState } from '@/types.js'
 
 export const splitPhase: Recipe<[{ phase: number; phaseState: PhaseState; maxFiles: number }]> = {
-  profile: 'haiku',
+  profile: '',
   prompt: ({
     phaseState,
     maxFiles,

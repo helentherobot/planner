@@ -1,8 +1,8 @@
 import type { Recipe } from '@helentherobot/runner'
-import type { PhaseState } from '../types.js'
+import type { PhaseState } from '@/types.js'
 
 export const indexPhase: Recipe<[{ phase: number; phaseState: PhaseState }]> = {
-  profile: 'haiku',
+  profile: '',
   prompt: ({
     phaseState,
   }) => `Extract a flat list of all file paths mentioned in the following implementation plan.

@@ -1,17 +1,27 @@
+import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
+
 export interface Config {
   maxFilesPerPhase: number
   minimumIterations: number
   maximumIterations: number
+  taskProfiles?: Record<string, string | (() => string | Promise<string>)>
+}
+
+export interface ControlFinding {
+  path: string
+  reason: string
 }
 
 /**
  * Persisted memory for a single QualityControl across check/investigate cycles.
- * `dismissed` accumulates false-positive findings injected into the next check prompt.
+ * `dismissed` accumulates false-positive findings with their reason. Same path + same
+ * reason → excluded on next check; same path + different reason → warning (new concern
+ * about a previously cleared item).
  * `raised` collects confirmed problems batch-fed into revise, then cleared after revise runs.
  */
 export interface ControlState {
-  dismissed: string[]
-  raised: string[]
+  dismissed: ControlFinding[]
+  raised: ControlFinding[]
 }
 
 /**
@@ -52,8 +62,60 @@ export interface PlanState {
   completedAt: number | null
   currentTask: Task | null
   progressHandle: unknown
-  config: Config
   phases: PhaseState[]
   remainingTasks: Task[]
   completedTasks: Task[]
+}
+
+export interface ControlRecipeContext {
+  phase: number
+  iteration: number
+  phaseState: PhaseState
+  controlState: ControlState
+}
+
+export interface QualityControl {
+  name: string
+  checkRecipe: Recipe<[context: ControlRecipeContext]>
+  investigateRecipe: Recipe<[context: ControlRecipeContext]>
+  afterInvestigate?: (
+    dismissed: ControlFinding[],
+    phase: number,
+    store: Store,
+  ) => void | Promise<void>
+}
+
+export interface Store {
+  read(): PlanState | null
+  write(state: PlanState): void
+}
+
+export interface ProgressEvent {
+  brief: string
+  completedTasks: Task[]
+  totalTasks: number
+  currentTask: Task | null
+  isComplete: boolean
+}
+
+export interface Observer<THandle = unknown> {
+  start(event: ProgressEvent): Promise<THandle>
+  update(handle: THandle, event: ProgressEvent): Promise<void>
+  complete(handle: THandle, event: ProgressEvent): Promise<void>
+}
+
+export interface Tools {
+  runner: Runner
+  profile: string
+  cwd: string
+  tools: DiscoverableTool[]
+  taskTools?: Record<string, DiscoverableTool[]>
+}
+
+export interface Adapters {
+  tools: Tools
+  store: Store
+  observer: Observer
+  config: Config
+  controls: QualityControl[]
 }

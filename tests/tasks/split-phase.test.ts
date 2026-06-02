@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handleSplitPhase } from '@/tasks/split-phase.js'
 import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/adapters.js'
-import type { Store } from '@/store.js'
+import type { Adapters } from '@/types.js'
+import type { Store } from '@/types.js'
 
 function makePhaseState(overrides: Partial<PhaseState> = {}): PhaseState {
   return {
@@ -22,7 +22,6 @@ function makeState(phases: PhaseState[], remaining: Task[] = []): PlanState {
     completedAt: null,
     currentTask: null,
     progressHandle: null,
-    config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
     phases,
     remainingTasks: remaining,
     completedTasks: [],
@@ -52,11 +51,11 @@ describe('handleSplitPhase', () => {
 
     const runner = { run: vi.fn() } as unknown as Adapters['tools']['runner']
     const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', agentTools: {} },
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: state.config,
       controls: [],
+      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
     }
 
     const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
@@ -79,11 +78,11 @@ describe('handleSplitPhase', () => {
     } as unknown as Adapters['tools']['runner']
 
     const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', agentTools: {} },
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: state.config,
       controls: [],
+      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
     }
 
     const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
@@ -107,11 +106,11 @@ describe('handleSplitPhase', () => {
     } as unknown as Adapters['tools']['runner']
 
     const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', agentTools: {} },
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: state.config,
       controls: [],
+      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
     }
 
     const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)

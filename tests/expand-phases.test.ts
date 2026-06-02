@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { expandPhases } from '@/expand-phases.js'
-import { phaseTaskOrder } from '@/phase-map.js'
+import { expandPhases } from '@/helpers.js'
+import { phaseTaskOrder } from '@/helpers.js'
 
 describe('expandPhases', () => {
-  it('returns tasks for each phase followed by reorder-phases and cleanup', () => {
+  it('returns tasks for each phase followed by cleanup', () => {
     const tasks = expandPhases(['Phase A', 'Phase B'])
     const perPhase = phaseTaskOrder.length
-    const expected = perPhase * 2 + 2
+    const expected = perPhase * 2 + 1
     expect(tasks).toHaveLength(expected)
-    expect(tasks[tasks.length - 2].type).toBe('reorder-phases')
     expect(tasks[tasks.length - 1].type).toBe('cleanup')
   })
 
@@ -27,10 +26,9 @@ describe('expandPhases', () => {
     expect(types).toEqual(phaseTaskOrder)
   })
 
-  it('returns only terminal tasks for empty input', () => {
+  it('returns only cleanup for empty input', () => {
     const tasks = expandPhases([])
-    expect(tasks).toHaveLength(2)
-    expect(tasks[0].type).toBe('reorder-phases')
-    expect(tasks[1].type).toBe('cleanup')
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0].type).toBe('cleanup')
   })
 })

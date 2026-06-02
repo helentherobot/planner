@@ -1,8 +1,8 @@
 import type { Recipe } from '@helentherobot/runner'
-import type { PhaseState } from '../types.js'
+import type { PhaseState } from '@/types.js'
 
 export const revisePhase: Recipe<[{ phase: number; phaseState: PhaseState; issues: string[] }]> = {
-  profile: 'sonnet',
+  profile: '',
   prompt: ({
     phase,
     phaseState,

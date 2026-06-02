@@ -1,6 +1,7 @@
-import type { Task, PlanState, ControlState } from '../types.js'
-import type { Adapters } from '../adapters.js'
-import { updateControl } from '../store-helpers.js'
+import type { Task, PlanState, ControlState, ControlFinding } from '@/types.js'
+
+import type { Adapters } from '@/types.js'
+import { resolveProfile, runRecipe, updateControl } from '@/helpers.js'
 
 export async function handleCheckPhase(
   task: Task,
@@ -17,20 +18,30 @@ export async function handleCheckPhase(
         dismissed: [],
         raised: [],
       }
-      const result = await adapters.tools.runner.run(control.checkRecipe, [
-        { phase, iteration, phaseState, controlState },
-      ])
-      const text = result.text.trim()
-      if (text === '(clean)') return
+      const result = await runRecipe(
+        adapters.tools.runner,
+        await resolveProfile(adapters, task.type, control.checkRecipe.profile),
+        control.checkRecipe,
+        [{ phase, iteration, phaseState, controlState }],
+      )
 
-      const issues = text
-        .split('\n')
-        .map((l) => l.replace(/^[-*]\s*/, '').trim())
-        .filter(Boolean)
+      let parsed: { findings: ControlFinding[] }
+      try {
+        const text = result.text
+          .trim()
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/\s*```$/, '')
+        parsed = JSON.parse(text)
+      } catch {
+        console.warn(`check-phase: failed to parse result for control "${control.name}"`)
+        return
+      }
 
-      if (issues.length > 0) {
+      const newFindings = parsed.findings ?? []
+
+      if (newFindings.length > 0) {
         updateControl(adapters.store, phase, control.name, {
-          raised: [...controlState.raised, ...issues],
+          raised: [...controlState.raised, ...newFindings],
         })
       }
     }),
@@ -43,12 +54,16 @@ export async function handleCheckPhase(
   )
 
   if (anyRaised) {
+    const alreadyQueued = state.remainingTasks.some(
+      (t) => t.type === 'investigate-phase' && t.phase === phase,
+    )
+    if (alreadyQueued) return { ...updatedState, remainingTasks: state.remainingTasks }
     const investigateTask: Task = { type: 'investigate-phase', phase }
     return {
       ...updatedState,
-      remainingTasks: [investigateTask, ...updatedState.remainingTasks],
+      remainingTasks: [investigateTask, ...state.remainingTasks],
     }
   }
 
-  return updatedState
+  return { ...updatedState, remainingTasks: state.remainingTasks }
 }

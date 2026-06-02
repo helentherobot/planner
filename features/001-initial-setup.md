@@ -21,21 +21,19 @@ A fully buildable, testable, publishable npm package that:
 
 ### Functional
 
-- [ ] Package builds cleanly with `tsc` and all tests pass with `vitest run`.
-- [ ] All types are exported from `src/index.ts`: `PlanState`, `PhaseState`, `Config`, `Task`, `ControlState`.
-- [ ] All interfaces are exported: `Store`, `Observer`, `Tools`, `QualityControl`, `ControlRecipeContext`, `Adapters`.
-- [ ] Built-in `QualityControl` values exported: `vaguenessControl`, `duplicationControl`, `scopeControl`.
-- [ ] `defaultControls` exported as a convenience array of all three.
-- [ ] `run` and `expandPhases` are exported.
-- [ ] All task handlers are exported, named after their handler file: `handleNormalizePhasePrompt`, `handlePlanPhase`, `handleNormalizePhasePlan`, `handleIndexPhase`, `handleSplitPhase`, `handleCheckPhase`, `handleInvestigatePhase`, `handleRevisePhase`, `handleCollectFeedback`, `handleReorderPhases`, `handleCleanup`, `handleCommitPhase`.
-- [ ] `Recipe` interface and all recipes are exported.
+- [x] Package builds cleanly with `tsc` and all tests pass with `vitest run`.
+- [x] All types and interfaces are exported from `src/index.ts` via `export type * from './types.js'`: `PlanState`, `PhaseState`, `Config`, `Task`, `ControlState`, `Store`, `Observer`, `Tools`, `QualityControl`, `ControlRecipeContext`, `Adapters`.
+- [x] Built-in `QualityControl` values exported: `vaguenessControl`, `duplicationControl`, `scopeControl`.
+- [x] `defaultControls` exported as a convenience array of all three.
+- [x] `run` exported. `expandPhases` is internal — consumers start a run with `remainingTasks: [{ type: 'synthesize-phases' }]` and never call it directly.
+- [x] Task handlers and individual recipes are internal. The public API is intentionally minimal: types, controls, and `run()`. Consumers extend behaviour via `Adapters.controls`, not by reaching into internals.
 
 ### Non-Functional
 
-- [ ] Package structure mirrors `@helentherobot/runner` (same tsconfig, vitest config, CI, devDeps).
-- [ ] No imports from any host application — package is self-contained.
-- [ ] CI: push + PR to main triggers typecheck + format check + unit tests.
-- [ ] `README.md` documents end-to-end usage (see below).
+- [x] Package structure mirrors `@helentherobot/runner` (same tsconfig, vitest config, CI, devDeps).
+- [x] No imports from any host application — package is self-contained.
+- [x] CI: push + PR to main triggers typecheck + format check + unit tests.
+- [x] `README.md` documents end-to-end usage (see below).
 
 ### Out of Scope
 
@@ -826,7 +824,7 @@ Runs the same prompt through multiple profiles and outputs a side-by-side compar
 
 ## Questions/Decisions Needed
 
-- [ ] Should the three orphaned recipes be included or dropped?
+_None._
 
 ## Decisions Made
 
@@ -834,6 +832,12 @@ Runs the same prompt through multiple profiles and outputs a side-by-side compar
 - **Scope**: This package owns the orchestration core only. Host wiring is out of scope.
 - **`cwd` source**: Spawned agents receive `cwd` from `adapters.tools.cwd` — no separate context type needed.
 - **`check-phase` and `commit-phase` included**: No host deps, so they belong here even though they are also used by implementation workflows.
+- **Orphaned recipes dropped**: `criticise-phase.ts`, `summarise-feedback.ts`, `rewrite-references.ts` are candidates for a future feature and are not included here.
+- **Minimal public API**: Task handlers and individual recipes are not exported. The public surface is types, controls, and `run()`. Consumers extend via `Adapters.controls`.
+- **Types consolidated**: All types and interfaces live in `src/types.ts`. No separate `store.ts`, `observer.ts`, `tools.ts`, `adapters.ts` files.
+- **Helpers consolidated**: `expand-phases.ts`, `phase-map.ts`, `claimed-files.ts`, `store-helpers.ts` consolidated into `src/helpers.ts`.
+- **Profile resolution**: Recipes use `profile: ''` as a placeholder. The actual profile is injected at call time via `runRecipe()` using `adapters.tools.profile`, with per-task overrides via `Config.taskProfiles` (accepts string or async closure).
+- **Plan tools extracted**: Agent tools (`__plan_write_phase`, `__plan_read_phase`, `__plan_write_recon`, `__plan_read_recon`) live in `src/tools/` — one file per tool plus `src/tools/helpers.ts` for shared utilities.
 
 ## Session History
 
@@ -841,6 +845,16 @@ Runs the same prompt through multiple profiles and outputs a side-by-side compar
 
 - Planned four phases: scaffold, types, core extraction, Adapters wiring.
 - Confirmed zero host-application dependencies in any file being included.
+
+### Session 2
+
+- Implemented all four phases via sub-agents.
+- Refactored: consolidated types into `types.ts`, helpers into `helpers.ts`, plan tools into `src/tools/`.
+- Stripped public API to types + controls + `run()`.
+- Added `Config.taskProfiles` for per-task profile overrides (string or async closure).
+- Fixed `run()` observer lifecycle: `start()` before loop, `complete()` after.
+- Added README and evaluations scaffold.
+- Resolved all open questions.
 
 ## Progress
 

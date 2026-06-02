@@ -1,7 +1,7 @@
-import type { Task, PlanState } from '../types.js'
-import type { Adapters } from '../adapters.js'
-import { revisePhase as revisePhaseRecipe } from '../recipes/revise-phase.js'
-import { updatePhase, updateControl } from '../store-helpers.js'
+import type { Task, PlanState } from '@/types.js'
+import type { Adapters } from '@/types.js'
+import { revisePhase as revisePhaseRecipe } from '@/recipes/revise-phase.js'
+import { resolveProfile, runRecipe, updatePhase, updateControl } from '@/helpers.js'
 
 export async function handleRevisePhase(
   task: Task,
@@ -15,7 +15,7 @@ export async function handleRevisePhase(
   for (const control of adapters.controls) {
     const controlState = phaseState.controls[control.name]
     if (controlState?.raised?.length) {
-      allIssues.push(...controlState.raised)
+      allIssues.push(...controlState.raised.map((f) => `${f.path} — ${f.reason}`))
     }
   }
 
@@ -23,9 +23,12 @@ export async function handleRevisePhase(
     return state
   }
 
-  const result = await adapters.tools.runner.run(revisePhaseRecipe, [
-    { phase, phaseState, issues: allIssues },
-  ])
+  const result = await runRecipe(
+    adapters.tools.runner,
+    await resolveProfile(adapters, task.type, revisePhaseRecipe.profile),
+    revisePhaseRecipe,
+    [{ phase, phaseState, issues: allIssues }],
+  )
 
   updatePhase(adapters.store, phase, { brief: result.text })
 
@@ -36,5 +39,5 @@ export async function handleRevisePhase(
     }
   }
 
-  return adapters.store.read()!
+  return { ...adapters.store.read()!, remainingTasks: state.remainingTasks }
 }

@@ -1,7 +1,7 @@
-import type { Task, PlanState, PhaseState } from '../types.js'
-import type { Adapters } from '../adapters.js'
-import { splitPhase as splitPhaseRecipe } from '../recipes/split-phase.js'
-import { phaseTaskOrder } from '../phase-map.js'
+import type { Task, PlanState, PhaseState } from '@/types.js'
+import type { Adapters } from '@/types.js'
+import { splitPhase as splitPhaseRecipe } from '@/recipes/split-phase.js'
+import { resolveProfile, runRecipe, phaseTaskOrder } from '@/helpers.js'
 
 export async function handleSplitPhase(
   task: Task,
@@ -10,16 +10,19 @@ export async function handleSplitPhase(
 ): Promise<PlanState> {
   const phase = task.phase!
   const phaseState = state.phases[phase]
-  const maxFiles = state.config.maxFilesPerPhase
+  const maxFiles = adapters.config.maxFilesPerPhase
 
   const fileCount = (phaseState.index ?? '').split('\n').filter((l) => l.trim()).length
   if (fileCount <= maxFiles) {
     return state
   }
 
-  const result = await adapters.tools.runner.run(splitPhaseRecipe, [
-    { phase, phaseState, maxFiles },
-  ])
+  const result = await runRecipe(
+    adapters.tools.runner,
+    await resolveProfile(adapters, task.type, splitPhaseRecipe.profile),
+    splitPhaseRecipe,
+    [{ phase, phaseState, maxFiles }],
+  )
 
   let subPhases: Array<{ title: string; brief: string }>
   try {
@@ -54,7 +57,11 @@ export async function handleSplitPhase(
     ...state.phases.slice(phase + 1),
   ]
 
-  const updatedRemaining = [...newTasks, ...state.remainingTasks]
+  const phaseTaskSet = new Set(phaseTaskOrder)
+  const filteredRemaining = state.remainingTasks.filter(
+    (t) => !(t.phase === phase && phaseTaskSet.has(t.type)),
+  )
+  const updatedRemaining = [...newTasks, ...filteredRemaining]
 
   const nextState: PlanState = {
     ...state,
