@@ -68,9 +68,9 @@ This feature will add cross-phase file context to planning and checking agents, 
 
    ```ts
    export interface OtherPhaseContext {
-     index: number      // zero-based phase index (= phase number - 1)
+     index: number // zero-based phase index (= phase number - 1)
      title: string
-     fileIndex: string  // the phase's index field — empty string when not yet indexed
+     fileIndex: string // the phase's index field — empty string when not yet indexed
    }
    ```
 
@@ -84,7 +84,7 @@ This feature will add cross-phase file context to planning and checking agents, 
      iteration: number
      phaseState: PhaseState
      controlState: ControlState
-     otherPhases: OtherPhaseContext[]   // empty array when no other phase is indexed
+     otherPhases: OtherPhaseContext[] // empty array when no other phase is indexed
    }
    ```
 
@@ -94,8 +94,8 @@ This feature will add cross-phase file context to planning and checking agents, 
 
    ```ts
    export interface UsageEvent {
-     taskType: string          // task.type, e.g. 'plan-phase', 'check-phase'
-     controlName?: string      // set for check-phase and investigate-phase per-control calls
+     taskType: string // task.type, e.g. 'plan-phase', 'check-phase'
+     controlName?: string // set for check-phase and investigate-phase per-control calls
      inputTokens: number
      outputTokens: number
      totalCostUsd?: number
@@ -135,13 +135,12 @@ This feature will add cross-phase file context to planning and checking agents, 
      .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
      .filter((p) => p.index !== phase && p.fileIndex.length > 0)
 
-   const crossPhaseBlock = otherPhases.length > 0
-     ? 'Other phases already planned — avoid these files unless this phase specifically requires them:\n\n' +
-       otherPhases
-         .map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`)
-         .join('\n\n') +
-       '\n\n'
-     : ''
+   const crossPhaseBlock =
+     otherPhases.length > 0
+       ? 'Other phases already planned — avoid these files unless this phase specifically requires them:\n\n' +
+         otherPhases.map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`).join('\n\n') +
+         '\n\n'
+       : ''
 
    const userMessage = crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)
    ```
@@ -170,41 +169,40 @@ This feature will add cross-phase file context to planning and checking agents, 
    Import `OtherPhaseContext` from `../types`.
 
 3. **`src/prompts/check-phase/scope-check.ts`** — add cross-phase file section before the plan:
-
    - Update the `prompt()` destructuring to include `otherPhases`
    - Compute a `crossPhaseBlock`:
 
      ```ts
-     const crossPhaseBlock = otherPhases.length > 0
-       ? 'Files already claimed by other phases — flag any file in this phase\'s index that also appears here:\n\n' +
-         otherPhases
-           .map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`)
-           .join('\n\n') +
-         '\n\n'
-       : ''
+     const crossPhaseBlock =
+       otherPhases.length > 0
+         ? "Files already claimed by other phases — flag any file in this phase's index that also appears here:\n\n" +
+           otherPhases
+             .map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`)
+             .join('\n\n') +
+           '\n\n'
+         : ''
      ```
 
    - Insert `crossPhaseBlock` into the returned prompt string, before the section that lists the current phase's plan/index.
 
 4. **`src/prompts/check-phase/duplication-check.ts`** — same pattern:
-
    - Update the `prompt()` destructuring to include `otherPhases`
    - Compute a `crossPhaseBlock`:
 
      ```ts
-     const crossPhaseBlock = otherPhases.length > 0
-       ? 'Work already planned in other phases — flag anything in this phase that duplicates what another phase intends:\n\n' +
-         otherPhases
-           .map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`)
-           .join('\n\n') +
-         '\n\n'
-       : ''
+     const crossPhaseBlock =
+       otherPhases.length > 0
+         ? 'Work already planned in other phases — flag anything in this phase that duplicates what another phase intends:\n\n' +
+           otherPhases
+             .map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`)
+             .join('\n\n') +
+           '\n\n'
+         : ''
      ```
 
    - Insert `crossPhaseBlock` into the returned prompt string, before the section that lists the current phase's plan.
 
 5. **`tests/tasks/plan-phase.test.ts`** (new file) — cover:
-
    - When `state.phases` has only one phase (current phase), `otherPhases` is empty and the user message equals `phaseState.prompt ?? phaseState.brief` verbatim (no prepended block)
    - When another phase exists but has an empty `index`, it is excluded from the cross-phase block
    - When another phase has a non-empty `index`, the cross-phase block is prepended to the user message and contains that phase's title and file list
@@ -212,7 +210,6 @@ This feature will add cross-phase file context to planning and checking agents, 
    - Use the same factory/mock patterns as `tests/tasks/check-phase.test.ts` (inline adapters, `vi.fn()` for runner)
 
 6. **`tests/tasks/check-phase.test.ts`** (update) — add cases:
-
    - When `state.phases` has no other indexed phases, `otherPhases` passed to the recipe context is `[]`
    - When another phase has a non-empty `index`, `otherPhases` contains that phase and is passed through to the recipe context
 
@@ -345,7 +342,6 @@ This feature will add cross-phase file context to planning and checking agents, 
     ```
 
 12. **Tests** — for each task handler that has an existing test file, add a case where `adapters.onUsage` is a `vi.fn()` and verify it is called with the correct `taskType` and `usage` fields after the handler runs. Specifically:
-
     - `tests/tasks/check-phase.test.ts`: verify `onUsage` is called once per control with `controlName` set
     - `tests/tasks/split-phase.test.ts`: verify `onUsage` is called when the split branch runs, and NOT called when the file count is within limit
     - `tests/tasks/plan-phase.test.ts` (new, from Phase 2): verify `onUsage` is called once after `send()` resolves
@@ -403,10 +399,9 @@ This feature will add cross-phase file context to planning and checking agents, 
 ### Completed
 
 - Research and planning
+- Phase 1: Type system foundations
 
 ### In Progress
-
-- Phase 1: Type system foundations
 
 ### To Do
 
