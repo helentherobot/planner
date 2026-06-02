@@ -17,11 +17,13 @@ export async function handlePlanPhase(
     .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
     .filter((p) => p.index !== phase && p.fileIndex.length > 0)
 
+  const other = otherPhases
+    .map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`)
+    .join('\n\n')
+
   const crossPhaseBlock =
     otherPhases.length > 0
-      ? 'Other phases already planned — avoid these files unless this phase specifically requires them:\n\n' +
-        otherPhases.map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`).join('\n\n') +
-        '\n\n'
+      ? `Other phases already planned — avoid these files unless this phase specifically requires them: ${other}`
       : ''
 
   const userMessage = crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)

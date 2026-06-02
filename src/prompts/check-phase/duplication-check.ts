@@ -6,11 +6,13 @@ export function prompt({ phaseState, controlState, otherPhases }: ControlRecipeC
   const cleared =
     controlState.dismissed.length > 0 ? `CLEARED ITEMS — do not flag these: ${dismissed}` : ''
 
+  const other = otherPhases
+    .map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`)
+    .join('\n\n')
+
   const crossPhaseBlock =
     otherPhases.length > 0
-      ? 'Work already planned in other phases — flag anything in this phase that duplicates what another phase intends:\n\n' +
-        otherPhases.map((p) => `Phase ${p.index + 1} (${p.title}):\n${p.fileIndex}`).join('\n\n') +
-        '\n\n'
+      ? `Work already planned in other phases — flag anything in this phase that duplicates what another phase intends: ${other}`
       : ''
 
   return `
@@ -18,7 +20,9 @@ export function prompt({ phaseState, controlState, otherPhases }: ControlRecipeC
 
     Review this phase plan for work that is cross-cutting or foundational and clearly does not belong in this specific phase. Only flag concrete tasks (not context-setting prose). Do not flag work specific to this feature even if it touches shared files.
 
-    ${crossPhaseBlock}Plan:
+    ${crossPhaseBlock}
+
+    Plan:
     ${phaseState.brief}
 
     Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<item name only, no explanation>", "reason": "<why it belongs in a different phase>" }] }. Do not include cleared items. Output only the JSON.
