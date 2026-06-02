@@ -1,22 +1,22 @@
 import type { QualityControl, ControlFinding, Store } from '@/types.js'
 import { updatePhase } from '@/helpers.js'
-import { checkPhaseVagueness } from '@/recipes/check-phase-vagueness.js'
-import { investigatePhaseVagueness } from '@/recipes/investigate-phase-vagueness.js'
-import { checkPhaseDuplication } from '@/recipes/check-phase-duplication.js'
-import { investigatePhaseDuplication } from '@/recipes/investigate-phase-duplication.js'
-import { checkPhaseScope } from '@/recipes/check-phase-scope.js'
-import { investigatePhaseScope } from '@/recipes/investigate-phase-scope.js'
+import { prompt as vaguenessCheck } from '@/prompts/check-phase/vagueness-check.js'
+import { prompt as vaguenessInvestigation } from '@/prompts/check-phase/vagueness-investigation.js'
+import { prompt as duplicationCheck } from '@/prompts/check-phase/duplication-check.js'
+import { prompt as duplicationInvestigation } from '@/prompts/check-phase/duplication-investigation.js'
+import { prompt as scopeCheck } from '@/prompts/check-phase/scope-check.js'
+import { prompt as scopeInvestigation } from '@/prompts/check-phase/scope-investigation.js'
 
 export const vaguenessControl: QualityControl = {
   name: 'vagueness',
-  checkRecipe: checkPhaseVagueness,
-  investigateRecipe: investigatePhaseVagueness,
+  checkRecipe: { profile: '', prompt: vaguenessCheck },
+  investigateRecipe: { profile: '', prompt: vaguenessInvestigation },
 }
 
 export const duplicationControl: QualityControl = {
   name: 'duplication',
-  checkRecipe: checkPhaseDuplication,
-  investigateRecipe: investigatePhaseDuplication,
+  checkRecipe: { profile: '', prompt: duplicationCheck },
+  investigateRecipe: { profile: '', prompt: duplicationInvestigation },
 }
 
 function addToIndex(dismissed: ControlFinding[], phase: number, store: Store): void {
@@ -38,8 +38,8 @@ function addToIndex(dismissed: ControlFinding[], phase: number, store: Store): v
 
 export const scopeControl: QualityControl = {
   name: 'scope',
-  checkRecipe: checkPhaseScope,
-  investigateRecipe: investigatePhaseScope,
+  checkRecipe: { profile: '', prompt: scopeCheck },
+  investigateRecipe: { profile: '', prompt: scopeInvestigation },
   afterInvestigate: addToIndex,
 }
 

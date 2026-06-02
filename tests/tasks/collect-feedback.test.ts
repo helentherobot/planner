@@ -57,14 +57,14 @@ function makeAdapters(state: PlanState, controls: QualityControl[] = []): Adapte
 const task: Task = { type: 'collect-feedback', phase: 0 }
 
 describe('handleCollectFeedback', () => {
-  it('queues commit-phase when all clean and iterations >= minimumIterations', async () => {
+  it('clears phase pipeline tasks when all clean and iterations >= minimumIterations', async () => {
     const phase = makePhaseState({ iterations: 1 })
     const state = makeState([phase])
     const adapters = makeAdapters(state)
 
     const result = await handleCollectFeedback(task, state, adapters)
 
-    expect(result.remainingTasks[0]?.type).toBe('commit-phase')
+    expect(result.remainingTasks).toHaveLength(0)
   })
 
   it('queues check-phase again when all clean but below minimumIterations', async () => {

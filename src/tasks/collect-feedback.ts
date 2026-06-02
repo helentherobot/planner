@@ -19,27 +19,20 @@ export async function handleCollectFeedback(
     'investigate-phase',
     'revise-phase',
     'collect-feedback',
-    'commit-phase',
   ])
   const withoutStalePhaseTasks = (remaining: Task[]) =>
     remaining.filter((t) => !(t.phase === phase && phasePipelineTasks.has(t.type)))
-
-  const commitPhaseTask = (remaining: Task[]): Task[] => {
-    const stripped = withoutStalePhaseTasks(remaining)
-    const alreadyCommitting = stripped.some((t) => t.type === 'commit-phase' && t.phase === phase)
-    return alreadyCommitting ? stripped : [{ type: 'commit-phase', phase }, ...stripped]
-  }
 
   const nextIterations = phaseState.iterations + 1
   updatePhase(adapters.store, phase, { iterations: nextIterations })
   const updated = adapters.store.read()!
 
   if (!anyRaised && nextIterations >= adapters.config.minimumIterations) {
-    return { ...updated, remainingTasks: commitPhaseTask(state.remainingTasks) }
+    return { ...updated, remainingTasks: withoutStalePhaseTasks(state.remainingTasks) }
   }
 
   if (nextIterations >= adapters.config.maximumIterations) {
-    return { ...updated, remainingTasks: commitPhaseTask(state.remainingTasks) }
+    return { ...updated, remainingTasks: withoutStalePhaseTasks(state.remainingTasks) }
   }
 
   const checkAlreadyQueued = state.remainingTasks.some(

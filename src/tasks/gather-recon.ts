@@ -2,7 +2,7 @@ import type { Task, PlanState } from '@/types.js'
 import type { Adapters } from '@/types.js'
 import { send } from '@helentherobot/runner'
 import { resolveProfile, resolveTools } from '@/helpers.js'
-import { gatherRecon as gatherReconRecipe } from '@/recipes/gather-recon.js'
+import { systemPrompt } from '@/prompts/gather-recon/system.js'
 
 export async function handleGatherRecon(
   task: Task,
@@ -12,11 +12,12 @@ export async function handleGatherRecon(
   const result = await send(
     adapters.tools.runner,
     {
-      profile: await resolveProfile(adapters, task.type, gatherReconRecipe.profile),
+      profile: await resolveProfile(adapters, task.type),
+      systemPrompt,
       tools: resolveTools(adapters, task.type),
       maxSteps: 20,
     },
-    [gatherReconRecipe.prompt({ brief: state.brief })],
+    [state.brief],
   )
 
   const lastMessage = result.messages.at(-1)

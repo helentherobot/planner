@@ -1,4 +1,4 @@
-import type { Task, PlanState, ControlState, ControlFinding } from '@/types.js'
+import type { Task, PlanState, ControlState } from '@/types.js'
 import type { Adapters } from '@/types.js'
 import { resolveProfile, runRecipe, updateControl } from '@/helpers.js'
 
@@ -26,7 +26,7 @@ export async function handleInvestigatePhase(
         [{ phase, iteration, phaseState, controlState }],
       )
 
-      let parsed: { confirmed: string[]; dismissed: ControlFinding[] }
+      let parsed: { confirmed: number[]; dismissed: number[] }
       try {
         const text = result.text
           .trim()
@@ -38,24 +38,16 @@ export async function handleInvestigatePhase(
         return
       }
 
-      const newDismissals: ControlFinding[] = (parsed.dismissed ?? []).map((d) => ({
-        path: String(d.path ?? '').trim(),
-        reason: String(d.reason ?? '').trim(),
-      }))
-      const confirmedPaths = new Set(parsed.confirmed ?? [])
+      const confirmedIndices = new Set((parsed.confirmed ?? []).map(Number))
+      const dismissedIndices = new Set((parsed.dismissed ?? []).map(Number))
 
-      const existingPaths = new Set(controlState.dismissed.map((d) => d.path))
-      for (const d of newDismissals) {
-        const existing = controlState.dismissed.find((e) => e.path === d.path)
-        if (existing && existing.reason !== d.reason) {
-          console.warn(
-            `investigate-phase: "${d.path}" dismissed again with a different reason.\n  Before: "${existing.reason}"\n  Now: "${d.reason}"`,
-          )
-        }
-      }
+      const confirmedFindings = controlState.raised.filter((_, i) => confirmedIndices.has(i + 1))
+      const newDismissals = controlState.raised.filter((_, i) => dismissedIndices.has(i + 1))
 
-      const confirmedFindings = controlState.raised.filter((f) => confirmedPaths.has(f.path))
-      const trulyNewDismissals = newDismissals.filter((d) => !existingPaths.has(d.path))
+      const existingDismissed = new Set(controlState.dismissed.map((d) => `${d.path}\0${d.reason}`))
+      const trulyNewDismissals = newDismissals.filter(
+        (d) => !existingDismissed.has(`${d.path}\0${d.reason}`),
+      )
 
       updateControl(adapters.store, phase, control.name, {
         raised: confirmedFindings,

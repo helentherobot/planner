@@ -1,7 +1,7 @@
 import type { Task, PlanState, PhaseState } from '@/types.js'
 import type { Adapters } from '@/types.js'
-import { splitPhase as splitPhaseRecipe } from '@/recipes/split-phase.js'
 import { resolveProfile, runRecipe, phaseTaskOrder } from '@/helpers.js'
+import { prompt } from '@/prompts/split-phase/recipe.js'
 
 export async function handleSplitPhase(
   task: Task,
@@ -19,8 +19,8 @@ export async function handleSplitPhase(
 
   const result = await runRecipe(
     adapters.tools.runner,
-    await resolveProfile(adapters, task.type, splitPhaseRecipe.profile),
-    splitPhaseRecipe,
+    await resolveProfile(adapters, task.type),
+    { profile: '', prompt },
     [{ phase, phaseState, maxFiles }],
   )
 

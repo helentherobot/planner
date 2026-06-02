@@ -1,7 +1,7 @@
 import type { Task, PlanState } from '@/types.js'
 import type { Adapters } from '@/types.js'
-import { revisePhase as revisePhaseRecipe } from '@/recipes/revise-phase.js'
 import { resolveProfile, runRecipe, updatePhase, updateControl } from '@/helpers.js'
+import { prompt } from '@/prompts/revise-phase/recipe.js'
 
 export async function handleRevisePhase(
   task: Task,
@@ -25,8 +25,8 @@ export async function handleRevisePhase(
 
   const result = await runRecipe(
     adapters.tools.runner,
-    await resolveProfile(adapters, task.type, revisePhaseRecipe.profile),
-    revisePhaseRecipe,
+    await resolveProfile(adapters, task.type),
+    { profile: '', prompt },
     [{ phase, phaseState, issues: allIssues }],
   )
 

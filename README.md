@@ -21,7 +21,7 @@ npm install @helentherobot/runner
 - **`Store`** — a persistence adapter with `read()` and `write()` methods, bound by the consumer to a specific location.
 - **`Observer`** — a progress reporting adapter that receives start, update, and complete events and returns an opaque handle used to track a single reporting resource (e.g. a Telegram message).
 - **`Tools`** — the AI execution adapter: a `Runner` instance, a default profile name, the project `cwd`, and the agent tools to expose. Per-task tool sets can be supplied via `taskTools`.
-- **`QualityControl`** — a named concern (vagueness, duplication, scope) with a `checkRecipe` that scans a phase and returns `ControlFinding[]`, and an `investigateRecipe` that confirms or dismisses each finding.
+- **`QualityControl`** — a named concern (vagueness, duplication, scope) with a `checkRecipe` that scans a phase and returns findings, and an `investigateRecipe` that confirms or dismisses each one by number.
 - **`ControlFinding`** — a structured finding: `{ path: string, reason: string }`. Both `raised` and `dismissed` lists use this type.
 
 ## Implementing `Store`
@@ -206,26 +206,26 @@ interface ControlFinding {
 }
 ```
 
-Using a structured type instead of free-form strings means:
-
-- The orchestrator can deduplicate findings by `path` across iterations without string parsing.
-- Dismissed findings carry a `reason`, so the investigate recipe can show the model _why_ a previous false positive was cleared, preventing it from re-flagging the same thing with a new justification.
-- Same `path`, different `reason` across two dismiss cycles produces a warning — it signals a genuine disagreement rather than silent data loss.
-
-Both `controlState.raised` and `controlState.dismissed` are `ControlFinding[]`. **Your recipes must instruct the model to produce this shape** — the orchestrator does not do any string parsing or inference. If the model returns something else, the finding is dropped.
+Both `controlState.raised` and `controlState.dismissed` are `ControlFinding[]`.
 
 ### Check recipe
 
-Must return `{ "findings": ControlFinding[] }`. Empty array means clean.
+Must return `{ "findings": ControlFinding[] }`. An empty array means the phase is clean.
 
 ### Investigate recipe
 
-Must return `{ "confirmed": string[], "dismissed": ControlFinding[] }`. `confirmed` is a list of `path` strings for findings that are genuine problems. `dismissed` is a list of `ControlFinding` objects (with `reason`) for false positives.
+Receives the raised findings numbered `1.`, `2.`, `3.` in the prompt. Must return:
+
+```json
+{ "confirmed": [1, 3], "dismissed": [2] }
+```
+
+Both arrays contain **issue numbers** — the 1-based positions from the list shown in the prompt. The orchestrator maps them back to the original `ControlFinding` objects. This means multiple findings for the same file or step are handled independently, and the model never needs to repeat or reconstruct finding text.
 
 ### Example
 
 ```ts
-import type { QualityControl, ControlFinding } from '@helentherobot/planner'
+import type { QualityControl } from '@helentherobot/planner'
 
 const consistencyControl: QualityControl = {
   name: 'consistency',
@@ -247,7 +247,9 @@ Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "
   investigateRecipe: {
     profile: '',
     prompt: ({ phaseState, controlState }) => {
-      const issues = controlState.raised.map((f) => `${f.path} — ${f.reason}`).join('\n')
+      const issues = controlState.raised
+        .map((f, i) => `${i + 1}. ${f.path} — ${f.reason}`)
+        .join('\n')
 
       return `The following consistency issues were flagged:
 
@@ -259,8 +261,8 @@ ${phaseState.brief}
 For each issue, decide: genuine problem or false positive?
 
 Return a JSON object with two arrays:
-- "confirmed": array of path strings for real problems
-- "dismissed": array of objects { "path": "...", "reason": "..." } for false positives
+- "confirmed": array of issue numbers for real problems
+- "dismissed": array of issue numbers for false positives
 
 Output only the JSON.`
     },

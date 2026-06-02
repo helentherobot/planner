@@ -12,7 +12,6 @@ import { handleInvestigatePhase } from '@/tasks/investigate-phase.js'
 import { handleRevisePhase } from '@/tasks/revise-phase.js'
 import { handleCollectFeedback } from '@/tasks/collect-feedback.js'
 import { handleCleanup } from '@/tasks/cleanup.js'
-import { handleCommitPhase } from '@/tasks/commit-phase.js'
 
 type TaskHandler = (task: Task, state: PlanState, adapters: Adapters) => Promise<PlanState>
 
@@ -29,7 +28,6 @@ const handlers: Record<string, TaskHandler> = {
   'revise-phase': handleRevisePhase,
   'collect-feedback': handleCollectFeedback,
   cleanup: handleCleanup,
-  'commit-phase': handleCommitPhase,
 }
 
 export async function run(

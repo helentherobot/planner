@@ -3,6 +3,7 @@ import type { Adapters } from '@/types.js'
 import { send } from '@helentherobot/runner'
 import { resolveProfile, resolveTools, updatePhase } from '@/helpers.js'
 import { makePlanReadPhase } from '@/tools/plan-read-phase.js'
+import { systemPrompt } from '@/prompts/plan-phase/system.js'
 
 export async function handlePlanPhase(
   task: Task,
@@ -17,8 +18,7 @@ export async function handlePlanPhase(
     adapters.tools.runner,
     {
       profile: await resolveProfile(adapters, task.type),
-      systemPrompt:
-        'You are a planning agent. Your only job is to produce detailed written implementation plans. You must NOT make any changes yourself — no file edits, no code generation beyond the plan document itself. Use tools to read and understand the codebase, then respond with a thorough plan describing exactly what changes to make, which files to touch, and why.',
+      systemPrompt,
       tools: [makePlanReadPhase(adapters.store, phase), ...resolveTools(adapters, task.type)],
       maxSteps: 20,
     },

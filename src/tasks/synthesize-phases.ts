@@ -1,17 +1,19 @@
 import type { Task, PlanState, PhaseState } from '@/types.js'
 import type { Adapters } from '@/types.js'
 import { resolveProfile, runRecipe, expandPhases } from '@/helpers.js'
-import { synthesizePhases as synthesizePhasesRecipe } from '@/recipes/synthesize-phases.js'
+import { prompt } from '@/prompts/synthesize-phases/recipe.js'
 
 export async function handleSynthesizePhases(
   task: Task,
   state: PlanState,
   adapters: Adapters,
 ): Promise<PlanState> {
-  const profile = await resolveProfile(adapters, task.type, synthesizePhasesRecipe.profile)
-  const result = await runRecipe(adapters.tools.runner, profile, synthesizePhasesRecipe, [
-    { brief: state.brief, recon: state.recon },
-  ])
+  const result = await runRecipe(
+    adapters.tools.runner,
+    await resolveProfile(adapters, task.type),
+    { profile: '', prompt },
+    [{ brief: state.brief, recon: state.recon }],
+  )
 
   const titles = result.text
     .split('\n')
