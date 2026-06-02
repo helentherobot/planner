@@ -1,4 +1,6 @@
-# @helentherobot/planner
+# Planner
+
+[![npm](https://img.shields.io/npm/v/@helentherobot/planner)](https://www.npmjs.com/package/@helentherobot/planner)
 
 `@helentherobot/planner` is the orchestration core for building phased implementation plans from a project brief. It accepts an `Adapters` bundle (persistence, progress reporting, AI execution, quality controls) and returns a serialisable `PlanState`. The package owns all orchestration logic — task sequencing, quality check loops, phase splitting, and plan revision — and has no dependency on any host application.
 
