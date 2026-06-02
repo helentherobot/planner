@@ -232,16 +232,21 @@ const consistencyControl: QualityControl = {
   checkRecipe: {
     profile: '',
     prompt: ({ phaseState, controlState }) => {
+      const dismissed = controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')
       const cleared =
         controlState.dismissed.length > 0
-          ? `\nPreviously cleared — do not re-flag:\n${controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')}`
+          ? `Previously cleared — do not re-flag:\n${dismissed}`
           : ''
 
-      return `Review this phase plan for internal inconsistencies:
+      return `
+        ${cleared}
 
-${phaseState.brief}${cleared}
+        Review this phase plan for internal inconsistencies:
 
-Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<item>", "reason": "<why it is inconsistent>" }] }. Output only the JSON.`
+        ${phaseState.brief}
+
+        Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<item>", "reason": "<why it is inconsistent>" }] }. Output only the JSON.
+      `
     },
   },
   investigateRecipe: {
@@ -251,20 +256,22 @@ Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "
         .map((f, i) => `${i + 1}. ${f.path} — ${f.reason}`)
         .join('\n')
 
-      return `The following consistency issues were flagged:
+      return `
+        The following consistency issues were flagged:
 
-${issues}
+        ${issues}
 
-Plan:
-${phaseState.brief}
+        Plan:
+        ${phaseState.brief}
 
-For each issue, decide: genuine problem or false positive?
+        For each issue, decide: genuine problem or false positive?
 
-Return a JSON object with two arrays:
-- "confirmed": array of issue numbers for real problems
-- "dismissed": array of issue numbers for false positives
+        Return a JSON object with two arrays:
+        - "confirmed": array of issue numbers for real problems
+        - "dismissed": array of issue numbers for false positives
 
-Output only the JSON.`
+        Output only the JSON.
+      `
     },
   },
 }
