@@ -111,4 +111,74 @@ describe('handleCheckPhase', () => {
 
     expect(result.remainingTasks).toHaveLength(0)
   })
+
+  it('passes otherPhases as empty array when no other phases have a non-empty index', async () => {
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const control: QualityControl = {
+      name: 'vagueness',
+      checkRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+      investigateRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+    }
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: JSON.stringify({ findings: [] }),
+        usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [control],
+    }
+
+    await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+
+    const [, args] = (runner.run as ReturnType<typeof vi.fn>).mock.calls[0]
+    const [context] = args
+    expect(context.otherPhases).toEqual([])
+  })
+
+  it('passes otherPhases containing indexed sibling phases to the recipe context', async () => {
+    const phase0 = makePhaseState({ title: 'Setup', index: 'src/setup.ts\nsrc/config.ts' })
+    const phase1 = makePhaseState({ title: 'Feature' })
+    const state = makeState([phase0, phase1])
+    const store = makeStore(state)
+
+    const control: QualityControl = {
+      name: 'scope',
+      checkRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+      investigateRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+    }
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: JSON.stringify({ findings: [] }),
+        usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [control],
+    }
+
+    await handleCheckPhase({ type: 'check-phase', phase: 1 }, state, adapters)
+
+    const [, args] = (runner.run as ReturnType<typeof vi.fn>).mock.calls[0]
+    const [context] = args
+    expect(context.otherPhases).toHaveLength(1)
+    expect(context.otherPhases[0].index).toBe(0)
+    expect(context.otherPhases[0].title).toBe('Setup')
+    expect(context.otherPhases[0].fileIndex).toBe('src/setup.ts\nsrc/config.ts')
+  })
 })

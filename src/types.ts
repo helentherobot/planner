@@ -78,7 +78,7 @@ export interface ControlRecipeContext {
   iteration: number
   phaseState: PhaseState
   controlState: ControlState
-  otherPhases?: OtherPhaseContext[]
+  otherPhases: OtherPhaseContext[]
 }
 
 export interface UsageEvent {

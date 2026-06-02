@@ -12,7 +12,19 @@ export async function handlePlanPhase(
 ): Promise<PlanState> {
   const phase = task.phase!
   const phaseState = state.phases[phase]
-  const userMessage = phaseState.prompt ?? phaseState.brief
+
+  const otherPhases = state.phases
+    .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
+    .filter((p) => p.index !== phase && p.fileIndex.length > 0)
+
+  const crossPhaseBlock =
+    otherPhases.length > 0
+      ? 'Other phases already planned — avoid these files unless this phase specifically requires them:\n\n' +
+        otherPhases.map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`).join('\n\n') +
+        '\n\n'
+      : ''
+
+  const userMessage = crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)
 
   const result = await send(
     adapters.tools.runner,
