@@ -129,6 +129,45 @@ config: {
 }
 ```
 
+## Tracking token usage with `onUsage`
+
+`onUsage` is an optional callback on `Adapters`. When provided, it is called once after every LLM invocation — once per `runRecipe` call (recipe-based tasks) and once per `send()` call (`plan-phase` and `gather-recon`). Each call carries a `UsageEvent`:
+
+```ts
+interface UsageEvent {
+  taskType: string       // e.g. 'plan-phase', 'check-phase'
+  controlName?: string   // set for check-phase and investigate-phase per-control calls
+  inputTokens: number
+  outputTokens: number
+  totalCostUsd?: number
+}
+```
+
+Use it to accumulate spend totals for a full planning run:
+
+```ts
+let totalInputTokens = 0
+let totalOutputTokens = 0
+let totalCostUsd = 0
+
+const adapters: Adapters = {
+  // ...
+  onUsage(event) {
+    totalInputTokens += event.inputTokens
+    totalOutputTokens += event.outputTokens
+    totalCostUsd += event.totalCostUsd ?? 0
+  },
+}
+
+await run(state, adapters)
+
+console.log(`Plan complete — $${totalCostUsd.toFixed(4)} (${totalInputTokens} in / ${totalOutputTokens} out)`)
+```
+
+`check-phase` and `investigate-phase` run controls concurrently, so `onUsage` may be called from multiple in-flight invocations at the same time. A simple accumulator (as above) is fine — JavaScript is single-threaded so the `+=` operations are safe.
+
+When `onUsage` is not provided, behaviour is identical to before — no errors, no overhead.
+
 ## Starting a plan
 
 ```ts
