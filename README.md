@@ -135,8 +135,8 @@ config: {
 
 ```ts
 interface UsageEvent {
-  taskType: string       // e.g. 'plan-phase', 'check-phase'
-  controlName?: string   // set for check-phase and investigate-phase per-control calls
+  taskType: string // e.g. 'plan-phase', 'check-phase'
+  controlName?: string // set for check-phase and investigate-phase per-control calls
   inputTokens: number
   outputTokens: number
   totalCostUsd?: number
@@ -161,7 +161,9 @@ const adapters: Adapters = {
 
 await run(state, adapters)
 
-console.log(`Plan complete — $${totalCostUsd.toFixed(4)} (${totalInputTokens} in / ${totalOutputTokens} out)`)
+console.log(
+  `Plan complete — $${totalCostUsd.toFixed(4)} (${totalInputTokens} in / ${totalOutputTokens} out)`,
+)
 ```
 
 `check-phase` and `investigate-phase` run controls concurrently, so `onUsage` may be called from multiple in-flight invocations at the same time. A simple accumulator (as above) is fine — JavaScript is single-threaded so the `+=` operations are safe.
