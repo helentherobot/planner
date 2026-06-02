@@ -145,6 +145,55 @@ describe('handleCheckPhase', () => {
     expect(context.otherPhases).toEqual([])
   })
 
+  it('calls onUsage once per control with controlName set', async () => {
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const control1: QualityControl = {
+      name: 'vagueness',
+      checkRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+      investigateRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+    }
+    const control2: QualityControl = {
+      name: 'scope',
+      checkRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+      investigateRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+    }
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: JSON.stringify({ findings: [] }),
+        usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const onUsage = vi.fn()
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [control1, control2],
+      onUsage,
+    }
+
+    await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+
+    expect(onUsage).toHaveBeenCalledTimes(2)
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskType: 'check-phase',
+        controlName: 'vagueness',
+        inputTokens: 10,
+      }),
+    )
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ taskType: 'check-phase', controlName: 'scope', inputTokens: 10 }),
+    )
+  })
+
   it('passes otherPhases containing indexed sibling phases to the recipe context', async () => {
     const phase0 = makePhaseState({ title: 'Setup', index: 'src/setup.ts\nsrc/config.ts' })
     const phase1 = makePhaseState({ title: 'Feature' })

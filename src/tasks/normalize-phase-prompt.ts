@@ -15,6 +15,7 @@ export async function handleNormalizePhasePrompt(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ phase, phaseState, recon: state.recon }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
   updatePhase(adapters.store, phase, { prompt: result.text })
   return { ...state, phases: adapters.store.read()!.phases }

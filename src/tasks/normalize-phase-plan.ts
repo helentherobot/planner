@@ -15,6 +15,7 @@ export async function handleNormalizePhasePlan(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ phase, phaseState }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
   updatePhase(adapters.store, phase, { brief: result.text })
   return { ...state, phases: adapters.store.read()!.phases }

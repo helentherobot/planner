@@ -37,6 +37,13 @@ export async function handlePlanPhase(
     [userMessage],
   )
 
+  adapters.onUsage?.({
+    taskType: task.type,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    totalCostUsd: result.usage.totalCostUsd,
+  })
+
   const lastMessage = result.messages.at(-1)
   const brief =
     lastMessage?.role === 'assistant'

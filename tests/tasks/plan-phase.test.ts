@@ -165,6 +165,33 @@ describe('handlePlanPhase', () => {
     expect(messages[0]).toContain('Build the feature.')
   })
 
+  it('calls onUsage after send resolves', async () => {
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+    const onUsage = vi.fn()
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [],
+      onUsage,
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ taskType: 'plan-phase', inputTokens: 10 }),
+    )
+  })
+
   it('does not include the current phase in the cross-phase block', async () => {
     const phase0 = makePhaseState({
       title: 'Current',

@@ -20,6 +20,13 @@ export async function handleGatherRecon(
     [state.brief],
   )
 
+  adapters.onUsage?.({
+    taskType: task.type,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    totalCostUsd: result.usage.totalCostUsd,
+  })
+
   const lastMessage = result.messages.at(-1)
   const recon =
     lastMessage?.role === 'assistant'

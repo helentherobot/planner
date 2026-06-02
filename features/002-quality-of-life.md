@@ -401,12 +401,11 @@ This feature will add cross-phase file context to planning and checking agents, 
 - Research and planning
 - Phase 1: Type system foundations
 - Phase 2: Cross-phase file awareness
+- Phase 3: `onUsage` hook wiring
 
 ### In Progress
 
 ### To Do
-
-- Phase 3: `onUsage` hook wiring
 
 ## Session History
 

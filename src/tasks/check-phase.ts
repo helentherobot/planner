@@ -27,6 +27,7 @@ export async function handleCheckPhase(
         await resolveProfile(adapters, task.type, control.checkRecipe.profile),
         control.checkRecipe,
         [{ phase, iteration, phaseState, controlState, otherPhases }],
+        { onUsage: adapters.onUsage, taskType: task.type, controlName: control.name },
       )
 
       let parsed: { findings: ControlFinding[] }

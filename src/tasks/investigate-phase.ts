@@ -24,6 +24,7 @@ export async function handleInvestigatePhase(
         await resolveProfile(adapters, task.type, control.investigateRecipe.profile),
         control.investigateRecipe,
         [{ phase, iteration, phaseState, controlState, otherPhases: [] }],
+        { onUsage: adapters.onUsage, taskType: task.type, controlName: control.name },
       )
 
       let parsed: { confirmed: number[]; dismissed: number[] }
