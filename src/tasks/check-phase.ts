@@ -1,4 +1,4 @@
-import type { Task, PlanState, ControlState, ControlFinding } from '@/types.js'
+import type { Task, PlanState, ControlState, ControlFinding, OtherPhaseContext } from '@/types.js'
 
 import type { Adapters } from '@/types.js'
 import { resolveProfile, runRecipe, updateControl } from '@/helpers.js'
@@ -12,6 +12,10 @@ export async function handleCheckPhase(
   const phaseState = state.phases[phase]
   const iteration = phaseState.iterations
 
+  const otherPhases: OtherPhaseContext[] = state.phases
+    .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
+    .filter((p) => p.index !== phase && p.fileIndex.length > 0)
+
   await Promise.all(
     adapters.controls.map(async (control) => {
       const controlState: ControlState = phaseState.controls[control.name] ?? {
@@ -22,7 +26,8 @@ export async function handleCheckPhase(
         adapters.tools.runner,
         await resolveProfile(adapters, task.type, control.checkRecipe.profile),
         control.checkRecipe,
-        [{ phase, iteration, phaseState, controlState }],
+        [{ phase, iteration, phaseState, controlState, otherPhases }],
+        { onUsage: adapters.onUsage, taskType: task.type, controlName: control.name },
       )
 
       let parsed: { findings: ControlFinding[] }

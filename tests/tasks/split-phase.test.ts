@@ -92,6 +92,59 @@ describe('handleSplitPhase', () => {
     expect(result.phases[1].title).toBe('Phase B')
   })
 
+  it('calls onUsage when the split branch runs', async () => {
+    const index = 'src/a.ts\nsrc/b.ts\nsrc/c.ts'
+    const phase = makePhaseState({ index })
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: splitResult,
+        usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const onUsage = vi.fn()
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      controls: [],
+      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      onUsage,
+    }
+
+    await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ taskType: 'split-phase', inputTokens: 10 }),
+    )
+  })
+
+  it('does not call onUsage when file count is within limit', async () => {
+    const phase = makePhaseState({ index: 'src/a.ts\nsrc/b.ts' })
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const runner = { run: vi.fn() } as unknown as Adapters['tools']['runner']
+    const onUsage = vi.fn()
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      controls: [],
+      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      onUsage,
+    }
+
+    await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+
+    expect(onUsage).not.toHaveBeenCalled()
+  })
+
   it('queues tasks for new phases after split', async () => {
     const index = 'src/a.ts\nsrc/b.ts\nsrc/c.ts'
     const phase = makePhaseState({ index })

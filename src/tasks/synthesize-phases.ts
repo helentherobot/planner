@@ -13,6 +13,7 @@ export async function handleSynthesizePhases(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ brief: state.brief, recon: state.recon }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
 
   const titles = result.text

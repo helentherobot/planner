@@ -28,6 +28,7 @@ export async function handleRevisePhase(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ phase, phaseState, issues: allIssues }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
 
   updatePhase(adapters.store, phase, { brief: result.text })

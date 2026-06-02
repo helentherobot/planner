@@ -1,5 +1,11 @@
 import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
-import type { Store, PlanState, PhaseState, ControlState, Task } from '@/types.js'
+import type { Store, PlanState, PhaseState, ControlState, Task, Adapters } from '@/types.js'
+
+type UsageCtx = {
+  onUsage: Adapters['onUsage']
+  taskType: string
+  controlName?: string
+}
 
 export async function resolveProfile(
   adapters: {
@@ -24,13 +30,22 @@ export function resolveTools(
   return adapters.tools.taskTools?.[taskType] ?? adapters.tools.tools
 }
 
-export function runRecipe<TArgs extends unknown[]>(
+export async function runRecipe<TArgs extends unknown[]>(
   runner: Runner,
   profile: string,
   recipe: Recipe<TArgs>,
   args: TArgs,
+  usageCtx?: UsageCtx,
 ) {
-  return runner.run({ ...recipe, profile }, args)
+  const result = await runner.run({ ...recipe, profile }, args)
+  usageCtx?.onUsage?.({
+    taskType: usageCtx.taskType,
+    controlName: usageCtx.controlName,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    totalCostUsd: result.usage.totalCostUsd,
+  })
+  return result
 }
 
 export const phaseTaskOrder: string[] = [

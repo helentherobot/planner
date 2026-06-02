@@ -22,6 +22,7 @@ export async function handleSplitPhase(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ phase, phaseState, maxFiles }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
 
   let subPhases: Array<{ title: string; brief: string }>

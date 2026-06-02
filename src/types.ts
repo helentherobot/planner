@@ -67,11 +67,26 @@ export interface PlanState {
   completedTasks: Task[]
 }
 
+export interface OtherPhaseContext {
+  index: number
+  title: string
+  fileIndex: string
+}
+
 export interface ControlRecipeContext {
   phase: number
   iteration: number
   phaseState: PhaseState
   controlState: ControlState
+  otherPhases: OtherPhaseContext[]
+}
+
+export interface UsageEvent {
+  taskType: string
+  controlName?: string
+  inputTokens: number
+  outputTokens: number
+  totalCostUsd?: number
 }
 
 export interface QualityControl {
@@ -118,4 +133,5 @@ export interface Adapters {
   observer: Observer
   config: Config
   controls: QualityControl[]
+  onUsage?: (event: UsageEvent) => void
 }

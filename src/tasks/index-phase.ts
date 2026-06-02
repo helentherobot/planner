@@ -15,6 +15,7 @@ export async function handleIndexPhase(
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
     [{ phase, phaseState }],
+    { onUsage: adapters.onUsage, taskType: task.type },
   )
   updatePhase(adapters.store, phase, { index: result.text })
   return { ...state, phases: adapters.store.read()!.phases }
