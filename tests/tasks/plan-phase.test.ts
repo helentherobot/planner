@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { handlePlanPhase } from '@/tasks/plan-phase.js'
-import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import type { Store } from '@/types.js'
+import { handlePlanPhase } from '../../src/tasks/plan-phase.js'
+import type { PlanState, Task, PhaseState } from '../../src/types.js'
+import type { Adapters } from '../../src/types.js'
+import type { Store } from '../../src/types.js'
 
 vi.mock('@helentherobot/runner', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@helentherobot/runner')>()

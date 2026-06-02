@@ -1,4 +1,4 @@
-import type { PhaseState } from '@/types.js'
+import type { PhaseState } from '../../types.js'
 
 export function prompt({
   phase,

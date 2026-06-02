@@ -1,4 +1,4 @@
-import type { ControlRecipeContext } from '@/types.js'
+import type { ControlRecipeContext } from '../../types.js'
 
 export function prompt({ phaseState, controlState }: ControlRecipeContext): string {
   const issues = controlState.raised.map((f, i) => `${i + 1}. ${f.path} — ${f.reason}`).join('\n')

@@ -1,4 +1,4 @@
-import type { ControlRecipeContext } from '@/types.js'
+import type { ControlRecipeContext } from '../../types.js'
 
 export function prompt({ phaseState, controlState, otherPhases }: ControlRecipeContext): string {
   const dismissed = controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')

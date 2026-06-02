@@ -1,6 +1,6 @@
 {
   "name": "@helentherobot/planner",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
@@ -24,7 +24,7 @@
     "eval:compare": "tsx evaluations/e2e/compare-profiles.ts"
   },
   "peerDependencies": {
-    "@helentherobot/runner": "^0.3.6",
+    "@helentherobot/runner": "0.3.7",
     "ai": ">=6.0.0"
   },
   "prettier": {

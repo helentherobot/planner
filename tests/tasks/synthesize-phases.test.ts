@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { handleSynthesizePhases } from '@/tasks/synthesize-phases.js'
-import type { PlanState, Task } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import type { Store } from '@/types.js'
+import { handleSynthesizePhases } from '../../src/tasks/synthesize-phases.js'
+import type { PlanState, Task } from '../../src/types.js'
+import type { Adapters } from '../../src/types.js'
+import type { Store } from '../../src/types.js'
 
 function makeState(): PlanState {
   return {

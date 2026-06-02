@@ -1,7 +1,7 @@
 import type { DiscoverableTool } from '@helentherobot/runner'
-import type { Store } from '@/types.js'
-import { makeDiscoverable } from '@/tools/helpers.js'
-import { updatePhase } from '@/helpers.js'
+import type { Store } from '../types.js'
+import { makeDiscoverable } from './helpers.js'
+import { updatePhase } from '../helpers.js'
 
 export function makePlanWritePhase(store: Store, phase: number): DiscoverableTool {
   return makeDiscoverable(

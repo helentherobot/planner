@@ -1,6 +1,6 @@
 import type { DiscoverableTool } from '@helentherobot/runner'
-import type { Store, PlanState } from '@/types.js'
-import { makeDiscoverable } from '@/tools/helpers.js'
+import type { Store, PlanState } from '../types.js'
+import { makeDiscoverable } from './helpers.js'
 
 export function makePlanWriteRecon(store: Store, fallbackState: PlanState): DiscoverableTool {
   return makeDiscoverable(

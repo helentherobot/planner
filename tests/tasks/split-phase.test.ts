@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { handleSplitPhase } from '@/tasks/split-phase.js'
-import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import type { Store } from '@/types.js'
+import { handleSplitPhase } from '../../src/tasks/split-phase.js'
+import type { PlanState, Task, PhaseState } from '../../src/types.js'
+import type { Adapters } from '../../src/types.js'
+import type { Store } from '../../src/types.js'
 
 function makePhaseState(overrides: Partial<PhaseState> = {}): PhaseState {
   return {

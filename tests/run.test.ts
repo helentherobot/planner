@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { run } from '@/run.js'
-import type { PlanState, Task } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import type { Store } from '@/types.js'
-import type { Observer } from '@/types.js'
+import { run } from '../src/run.js'
+import type { PlanState, Task } from '../src/types.js'
+import type { Adapters } from '../src/types.js'
+import type { Store } from '../src/types.js'
+import type { Observer } from '../src/types.js'
 
 function makeState(overrides: Partial<PlanState> = {}): PlanState {
   return {

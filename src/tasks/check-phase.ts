@@ -1,7 +1,7 @@
-import type { Task, PlanState, ControlState, ControlFinding, OtherPhaseContext } from '@/types.js'
+import type { Task, PlanState, ControlState, ControlFinding, OtherPhaseContext } from '../types.js'
 
-import type { Adapters } from '@/types.js'
-import { resolveProfile, runRecipe, updateControl } from '@/helpers.js'
+import type { Adapters } from '../types.js'
+import { resolveProfile, runRecipe, updateControl } from '../helpers.js'
 
 export async function handleCheckPhase(
   task: Task,

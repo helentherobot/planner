@@ -1,7 +1,7 @@
-import type { Task, PlanState, PhaseState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import { resolveProfile, runRecipe, phaseTaskOrder } from '@/helpers.js'
-import { prompt } from '@/prompts/split-phase/recipe.js'
+import type { Task, PlanState, PhaseState } from '../types.js'
+import type { Adapters } from '../types.js'
+import { resolveProfile, runRecipe, phaseTaskOrder } from '../helpers.js'
+import { prompt } from '../prompts/split-phase/recipe.js'
 
 export async function handleSplitPhase(
   task: Task,

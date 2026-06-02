@@ -1,8 +1,8 @@
-import type { Task, PlanState } from '@/types.js'
-import type { Adapters } from '@/types.js'
+import type { Task, PlanState } from '../types.js'
+import type { Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
-import { resolveProfile, resolveTools } from '@/helpers.js'
-import { systemPrompt } from '@/prompts/gather-recon/system.js'
+import { resolveProfile, resolveTools } from '../helpers.js'
+import { systemPrompt } from '../prompts/gather-recon/system.js'
 
 export async function handleGatherRecon(
   task: Task,

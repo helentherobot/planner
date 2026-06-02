@@ -1,9 +1,9 @@
-import type { Task, PlanState } from '@/types.js'
-import type { Adapters } from '@/types.js'
+import type { Task, PlanState } from '../types.js'
+import type { Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
-import { resolveProfile, resolveTools, updatePhase } from '@/helpers.js'
-import { makePlanReadPhase } from '@/tools/plan-read-phase.js'
-import { systemPrompt } from '@/prompts/plan-phase/system.js'
+import { resolveProfile, resolveTools, updatePhase } from '../helpers.js'
+import { makePlanReadPhase } from '../tools/plan-read-phase.js'
+import { systemPrompt } from '../prompts/plan-phase/system.js'
 
 export async function handlePlanPhase(
   task: Task,

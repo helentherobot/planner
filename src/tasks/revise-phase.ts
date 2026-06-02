@@ -1,7 +1,7 @@
-import type { Task, PlanState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import { resolveProfile, runRecipe, updatePhase, updateControl } from '@/helpers.js'
-import { prompt } from '@/prompts/revise-phase/recipe.js'
+import type { Task, PlanState } from '../types.js'
+import type { Adapters } from '../types.js'
+import { resolveProfile, runRecipe, updatePhase, updateControl } from '../helpers.js'
+import { prompt } from '../prompts/revise-phase/recipe.js'
 
 export async function handleRevisePhase(
   task: Task,

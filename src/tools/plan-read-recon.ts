@@ -1,6 +1,6 @@
 import type { DiscoverableTool } from '@helentherobot/runner'
-import type { Store } from '@/types.js'
-import { makeDiscoverable } from '@/tools/helpers.js'
+import type { Store } from '../types.js'
+import { makeDiscoverable } from './helpers.js'
 
 export function makePlanReadRecon(store: Store): DiscoverableTool {
   return makeDiscoverable(

@@ -1,7 +1,7 @@
-import type { Task, PlanState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import { resolveProfile, runRecipe, updatePhase } from '@/helpers.js'
-import { prompt } from '@/prompts/normalize-phase-prompt/recipe.js'
+import type { Task, PlanState } from '../types.js'
+import type { Adapters } from '../types.js'
+import { resolveProfile, runRecipe, updatePhase } from '../helpers.js'
+import { prompt } from '../prompts/normalize-phase-prompt/recipe.js'
 
 export async function handleNormalizePhasePrompt(
   task: Task,

@@ -1,11 +1,11 @@
-import type { QualityControl, ControlFinding, Store } from '@/types.js'
-import { updatePhase } from '@/helpers.js'
-import { prompt as vaguenessCheck } from '@/prompts/check-phase/vagueness-check.js'
-import { prompt as vaguenessInvestigation } from '@/prompts/check-phase/vagueness-investigation.js'
-import { prompt as duplicationCheck } from '@/prompts/check-phase/duplication-check.js'
-import { prompt as duplicationInvestigation } from '@/prompts/check-phase/duplication-investigation.js'
-import { prompt as scopeCheck } from '@/prompts/check-phase/scope-check.js'
-import { prompt as scopeInvestigation } from '@/prompts/check-phase/scope-investigation.js'
+import type { QualityControl, ControlFinding, Store } from './types.js'
+import { updatePhase } from './helpers.js'
+import { prompt as vaguenessCheck } from './prompts/check-phase/vagueness-check.js'
+import { prompt as vaguenessInvestigation } from './prompts/check-phase/vagueness-investigation.js'
+import { prompt as duplicationCheck } from './prompts/check-phase/duplication-check.js'
+import { prompt as duplicationInvestigation } from './prompts/check-phase/duplication-investigation.js'
+import { prompt as scopeCheck } from './prompts/check-phase/scope-check.js'
+import { prompt as scopeInvestigation } from './prompts/check-phase/scope-investigation.js'
 
 export const vaguenessControl: QualityControl = {
   name: 'vagueness',

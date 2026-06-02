@@ -1,7 +1,7 @@
-import type { Task, PlanState, PhaseState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import { resolveProfile, runRecipe, expandPhases } from '@/helpers.js'
-import { prompt } from '@/prompts/synthesize-phases/recipe.js'
+import type { Task, PlanState, PhaseState } from '../types.js'
+import type { Adapters } from '../types.js'
+import { resolveProfile, runRecipe, expandPhases } from '../helpers.js'
+import { prompt } from '../prompts/synthesize-phases/recipe.js'
 
 export async function handleSynthesizePhases(
   task: Task,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { expandPhases } from '@/helpers.js'
-import { phaseTaskOrder } from '@/helpers.js'
+import { expandPhases } from '../src/helpers.js'
+import { phaseTaskOrder } from '../src/helpers.js'
 
 describe('expandPhases', () => {
   it('returns tasks for each phase followed by cleanup', () => {

@@ -1,5 +1,5 @@
 import { describe, it } from 'vitest'
-import type { Config, ControlState, PhaseState, Task, PlanState } from '@/index.js'
+import type { Config, ControlState, PhaseState, Task, PlanState } from '../src/index.js'
 
 describe('types', () => {
   it('Config is exported and assignable', () => {

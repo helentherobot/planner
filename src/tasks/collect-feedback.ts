@@ -1,6 +1,6 @@
-import type { Task, PlanState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import { updatePhase } from '@/helpers.js'
+import type { Task, PlanState } from '../types.js'
+import type { Adapters } from '../types.js'
+import { updatePhase } from '../helpers.js'
 
 export async function handleCollectFeedback(
   task: Task,

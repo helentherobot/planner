@@ -1,5 +1,5 @@
 import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
-import type { Store, PlanState, PhaseState, ControlState, Task, Adapters } from '@/types.js'
+import type { Store, PlanState, PhaseState, ControlState, Task, Adapters } from './types.js'
 
 type UsageCtx = {
   onUsage: Adapters['onUsage']

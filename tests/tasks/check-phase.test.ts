@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { handleCheckPhase } from '@/tasks/check-phase.js'
-import type { PlanState, Task, PhaseState } from '@/types.js'
-import type { Adapters } from '@/types.js'
-import type { QualityControl } from '@/types.js'
-import type { Store } from '@/types.js'
+import { handleCheckPhase } from '../../src/tasks/check-phase.js'
+import type { PlanState, Task, PhaseState } from '../../src/types.js'
+import type { Adapters } from '../../src/types.js'
+import type { QualityControl } from '../../src/types.js'
+import type { Store } from '../../src/types.js'
 
 function makePhaseState(overrides: Partial<PhaseState> = {}): PhaseState {
   return {
