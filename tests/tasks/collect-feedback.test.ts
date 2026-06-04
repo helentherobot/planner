@@ -81,7 +81,7 @@ describe('handleCollectFeedback', () => {
     expect(result.remainingTasks[0]?.type).toBe('check-phase')
   })
 
-  it('queues revise-phase then gather-phase-questions then check-phase when issues are raised', async () => {
+  it('queues revise-phase then check-phase when issues are raised', async () => {
     const phase = makePhaseState({
       iterations: 1,
       controls: {
@@ -101,7 +101,40 @@ describe('handleCollectFeedback', () => {
     const result = await handleCollectFeedback(task, state, adapters)
 
     expect(result.remainingTasks[0]?.type).toBe('revise-phase')
-    expect(result.remainingTasks[1]?.type).toBe('gather-phase-questions')
-    expect(result.remainingTasks[2]?.type).toBe('check-phase')
+    expect(result.remainingTasks[1]?.type).toBe('check-phase')
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
+  })
+
+  it('does not strip gather-phase-questions or resolve-phase-questions on clean exit', async () => {
+    const phase = makePhaseState({ iterations: 1 })
+    const qaTask: Task = { type: 'gather-phase-questions', phase: 0 }
+    const resolveTask: Task = { type: 'resolve-phase-questions', phase: 0 }
+    const state = makeState([phase], [qaTask, resolveTask])
+    const adapters = makeAdapters(state)
+
+    const result = await handleCollectFeedback(task, state, adapters)
+
+    expect(result.remainingTasks).toContainEqual(qaTask)
+    expect(result.remainingTasks).toContainEqual(resolveTask)
+  })
+
+  it('does not re-queue gather-phase-questions or resolve-phase-questions when issues are raised', async () => {
+    const phase = makePhaseState({
+      iterations: 1,
+      controls: { vagueness: { dismissed: [], raised: ['Something is vague'] } },
+    })
+    const state = makeState([phase])
+    const control: QualityControl = {
+      name: 'vagueness',
+      checkRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+      investigateRecipe: { profile: 'haiku', prompt: vi.fn(() => '') },
+    }
+    const adapters = makeAdapters(state, [control])
+
+    const result = await handleCollectFeedback(task, state, adapters)
+
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
   })
 })

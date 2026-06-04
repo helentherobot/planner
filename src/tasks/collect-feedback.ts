@@ -47,14 +47,8 @@ export async function handleCollectFeedback(
     const reviseAlreadyQueued = state.remainingTasks.some(
       (t) => t.type === 'revise-phase' && t.phase === phase,
     )
-    const gatherPhaseQuestionsAlreadyQueued = state.remainingTasks.some(
-      (t) => t.type === 'gather-phase-questions' && t.phase === phase,
-    )
     const tasks: Task[] = [
       ...(!reviseAlreadyQueued ? [{ type: 'revise-phase', phase } as Task] : []),
-      ...(!gatherPhaseQuestionsAlreadyQueued
-        ? [{ type: 'gather-phase-questions', phase } as Task]
-        : []),
       ...(!checkAlreadyQueued ? [{ type: 'check-phase', phase } as Task] : []),
       ...(!collectAlreadyQueued ? [{ type: 'collect-feedback', phase } as Task] : []),
     ]

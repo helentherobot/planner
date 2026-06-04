@@ -12,6 +12,7 @@ import { handleCheckPhase } from './tasks/check-phase.js'
 import { handleInvestigatePhase } from './tasks/investigate-phase.js'
 import { handleRevisePhase } from './tasks/revise-phase.js'
 import { handleGatherPhaseQuestions } from './tasks/gather-phase-questions.js'
+import { handleResolvePhaseQuestions } from './tasks/resolve-phase-questions.js'
 import { handleCollectFeedback } from './tasks/collect-feedback.js'
 import { handleCleanup } from './tasks/cleanup.js'
 
@@ -21,6 +22,7 @@ const handlers: Record<string, TaskHandler> = {
   'gather-recon': handleGatherRecon,
   'gather-questions': handleGatherQuestions,
   'gather-phase-questions': handleGatherPhaseQuestions,
+  'resolve-phase-questions': handleResolvePhaseQuestions,
   'synthesize-phases': handleSynthesizePhases,
   'normalize-phase-prompt': handleNormalizePhasePrompt,
   'plan-phase': handlePlanPhase,

@@ -491,6 +491,7 @@ No tests needed for this phase — the changes are prompt text only and existing
 
 - Research and planning
 - Phase 1: prompt module + task handler + tests
+- Phase 2: wiring & integration
 
 ### In Progress
 
@@ -498,7 +499,6 @@ No tests needed for this phase — the changes are prompt text only and existing
 
 ### To Do
 
-- Phase 2: wiring & integration
 - Phase 3: eval recipe
 - Phase 4: strengthen existing prompts with plaintext instructions
 

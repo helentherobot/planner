@@ -19,6 +19,7 @@ const recipes = [
   'investigate-phase-scope',
   'gather-questions',
   'gather-phase-questions',
+  'collect-feedback-qa-sequencing',
 ]
 
 for (const name of recipes) {

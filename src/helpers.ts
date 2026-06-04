@@ -51,12 +51,13 @@ export async function runRecipe<TArgs extends unknown[]>(
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
   'plan-phase',
-  'gather-phase-questions',
   'normalize-phase-plan',
   'index-phase',
   'split-phase',
   'check-phase',
   'collect-feedback',
+  'gather-phase-questions',
+  'resolve-phase-questions',
 ]
 
 export function expandPhases(phases: string[]): Task[] {
