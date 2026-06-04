@@ -30,7 +30,8 @@ export async function handleGatherPhaseQuestions(
 
   let parsed: { questions: Array<{ question: string; context?: string }> }
   try {
-    parsed = JSON.parse(result.text)
+    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    parsed = JSON.parse(text)
   } catch {
     return state
   }

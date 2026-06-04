@@ -1,10 +1,9 @@
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-import { run, defaultControls, createInitialState } from '@/index.ts'
-import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '@/index.ts'
-import { makeDiscoverable } from '@/tools/helpers.ts'
+import { run, defaultControls, createInitialState } from '../../src/index.ts'
+import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '../../src/index.ts'
+import { makeDiscoverable } from '../../src/tools/helpers.ts'
 import { runner, profileNames, defaultProfile, prompts } from '../config.ts'
 
 function parseArgs() {
@@ -13,18 +12,22 @@ function parseArgs() {
   let min = 1
   let max = 2
   let profileName = ''
+  const answers: Array<{ questionId: string; answer: string }> = []
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--size' && args[i + 1]) size = args[++i] as keyof typeof prompts
     if (args[i] === '--min' && args[i + 1]) min = parseInt(args[++i], 10)
     if (args[i] === '--max' && args[i + 1]) max = parseInt(args[++i], 10)
     if (args[i] === '--profile' && args[i + 1]) profileName = args[++i]
+    if (args[i] === '--answer' && args[i + 1] && args[i + 2]) {
+      answers.push({ questionId: args[++i], answer: args[++i] })
+    }
   }
 
-  return { size, min, max, profileName }
+  return { size, min, max, profileName, answers }
 }
 
-const { size, min, max, profileName: rawProfile } = parseArgs()
+const { size, min, max, profileName: rawProfile, answers } = parseArgs()
 
 const profileName = rawProfile || defaultProfile
 
@@ -49,6 +52,10 @@ console.log(`  Size: ${size}`)
 console.log(`  Profile: ${profileName}`)
 console.log(`  Iterations: min=${min} max=${max}`)
 console.log(`  State: ${stateFile}`)
+if (answers.length > 0) {
+  console.log(`  Answers:`)
+  for (const a of answers) console.log(`    [${a.questionId}] ${a.answer}`)
+}
 console.log()
 
 const store: Store = {
@@ -156,10 +163,37 @@ const adapters: Adapters = {
 
 const brief = prompts[size]
 
-const finalState = await run(createInitialState(brief), adapters)
+let state = store.read() ?? createInitialState(brief)
+let result = await run(state, adapters, answers.length > 0 ? { answers } : undefined)
+
+while (result.status === 'needs-answers') {
+  console.log()
+  console.log(`Paused — structural questions (${result.questions.length}):`)
+  for (const q of result.questions) {
+    console.log(`  [${q.id}] ${q.question}`)
+    if (q.context) console.log(`       Context: ${q.context}`)
+  }
+  console.log()
+  console.log(`Re-run with --answer flags to resume, e.g.:`)
+  const flags = result.questions.map((q) => `--answer ${q.id} "your answer"`).join(' ')
+  console.log(`  tsx evaluations/e2e/plan.ts --size ${size} ${flags}`)
+  process.exit(0)
+}
+
+const finalState = result.state
 
 console.log()
 console.log(`Phases produced: ${finalState.phases.length}`)
 for (let i = 0; i < finalState.phases.length; i++) {
   console.log(`  Phase ${i + 1}: ${finalState.phases[i].title}`)
+}
+
+if (finalState.pendingQuestions.length > 0) {
+  console.log()
+  console.log(`Pending questions (${finalState.pendingQuestions.length}):`)
+  for (const q of finalState.pendingQuestions) {
+    const phases = Array.isArray(q.phaseIndex) ? q.phaseIndex.join(', ') : q.phaseIndex
+    console.log(`  [${q.id}] Phase ${phases}: ${q.question}`)
+    if (q.context) console.log(`       Context: ${q.context}`)
+  }
 }

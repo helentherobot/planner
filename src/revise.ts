@@ -27,7 +27,8 @@ export async function revise(
 
   let parsed: { additionalPhases: number[] }
   try {
-    parsed = JSON.parse(result.text)
+    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    parsed = JSON.parse(text)
   } catch {
     parsed = { additionalPhases: [] }
   }

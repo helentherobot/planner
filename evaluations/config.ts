@@ -1,6 +1,6 @@
 import { Runner } from '@helentherobot/runner'
 import type { RunnerConfig } from '@helentherobot/runner'
-import type { PhaseState, ControlState } from '@/index.ts'
+import type { PhaseState, ControlState } from '../src/index.ts'
 
 const runnerConfig: RunnerConfig = {
   profiles: {
@@ -41,6 +41,7 @@ export const defaultProfile = process.env.HELEN_PROFILE || profileNames[0]
 
 export const prompts = {
   tiny: `Add a new field, called dayOfWeek, to the PhaseState that gets written to during the cleanup task.`,
+  small: `Add a user notification system to the app. Users should be able to receive in-app notifications and optionally subscribe to email digests. Notifications should be dismissable and have a read/unread state. The system needs to work for both individual and bulk events (e.g. a batch job completing). We haven't decided yet whether to use a queue or write directly to the database, and we're not sure if email should go through SendGrid or SES.`,
 }
 
 export interface ControlFixture {

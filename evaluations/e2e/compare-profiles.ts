@@ -2,8 +2,8 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { run, defaultControls, createInitialState } from '@/index.ts'
-import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '@/index.ts'
+import { run, defaultControls, createInitialState } from '../../src/index.ts'
+import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '../../src/index.ts'
 import { runner, profileNames as availableProfiles, prompts } from '../config.ts'
 
 function parseArgs() {
@@ -99,9 +99,14 @@ async function runProfile(
   }
 
   const startedAt = Date.now()
-  const finalState = await run(createInitialState(brief), adapters)
+  const result = await run(createInitialState(brief), adapters)
 
-  return { phases: finalState.phases, elapsedMs: Date.now() - startedAt }
+  if (result.status === 'needs-answers') {
+    console.error(`[${profileName}] Paused — needs answers. Cannot compare profiles in this state.`)
+    process.exit(1)
+  }
+
+  return { phases: result.state.phases, elapsedMs: Date.now() - startedAt }
 }
 
 const results: Record<string, { phases: PlanState['phases']; elapsedMs: number }> = {}

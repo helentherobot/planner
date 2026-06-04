@@ -17,6 +17,8 @@ const recipes = [
   'investigate-phase-duplication',
   'check-phase-scope',
   'investigate-phase-scope',
+  'gather-questions',
+  'gather-phase-questions',
 ]
 
 for (const name of recipes) {
