@@ -48,7 +48,11 @@ function makeAdapters(storeState: PlanState): Adapters {
     },
     store,
     observer,
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [],
   }
 }
@@ -72,7 +76,9 @@ describe('run', () => {
     const result = await run(state, adapters)
 
     expect(result.status).toBe('complete')
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('unknown-task'))
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('unknown-task'),
+    )
     expect(result.state.completedTasks).toContainEqual(task)
     warnSpy.mockRestore()
   })
@@ -128,13 +134,19 @@ describe('run', () => {
 
   it('returns needs-answers when a task sets awaitingQuestions', async () => {
     const awaitingQuestions = [
-      { id: 'recon-0', question: 'Which database?', context: 'Affects phase structure.' },
+      {
+        id: 'recon-0',
+        question: 'Which database?',
+        context: 'Affects phase structure.',
+      },
     ]
 
-    const mockGatherQuestionsHandler = vi.fn(async (_task: Task, state: PlanState) => ({
-      ...state,
-      awaitingQuestions,
-    }))
+    const mockGatherQuestionsHandler = vi.fn(
+      async (_task: Task, state: PlanState) => ({
+        ...state,
+        awaitingQuestions,
+      }),
+    )
 
     const task: Task = { type: 'gather-questions' }
     const state = makeState({ remainingTasks: [task] })
@@ -147,7 +159,12 @@ describe('run', () => {
     const runner = {
       run: vi.fn(async () => ({
         text: JSON.stringify({
-          questions: [{ question: 'Which database?', context: 'Affects phase structure.' }],
+          questions: [
+            {
+              question: 'Which database?',
+              context: 'Affects phase structure.',
+            },
+          ],
         }),
         usage: { inputTokens: 10, outputTokens: 10, totalCostUsd: 0 },
       })),

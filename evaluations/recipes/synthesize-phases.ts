@@ -39,7 +39,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -48,7 +52,11 @@ console.log(`synthesize-phases — profile: ${profileName}`)
 console.log('Brief:', prompts.tiny)
 console.log()
 
-const result = await handleSynthesizePhases({ type: 'synthesize-phases' }, state, adapters)
+const result = await handleSynthesizePhases(
+  { type: 'synthesize-phases' },
+  state,
+  adapters,
+)
 
 console.log(`Phases produced: ${result.phases.length}`)
 for (let i = 0; i < result.phases.length; i++) {

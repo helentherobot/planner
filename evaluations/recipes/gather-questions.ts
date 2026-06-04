@@ -55,7 +55,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -64,7 +68,11 @@ console.log(`gather-questions — profile: ${profileName}`)
 console.log('Brief:', prompts.small)
 console.log()
 
-const result = await handleGatherQuestions({ type: 'gather-questions' }, state, adapters)
+const result = await handleGatherQuestions(
+  { type: 'gather-questions' },
+  state,
+  adapters,
+)
 
 if (result.awaitingQuestions.length === 0) {
   console.log('No structural questions — planning can proceed.')

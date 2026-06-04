@@ -1,6 +1,6 @@
 {
   "name": "@helentherobot/planner",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
@@ -30,7 +30,7 @@
   "prettier": {
     "semi": false,
     "singleQuote": true,
-    "printWidth": 100,
+    "printWidth": 80,
     "trailingComma": "all"
   },
   "devDependencies": {

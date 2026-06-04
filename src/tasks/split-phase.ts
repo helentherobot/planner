@@ -12,7 +12,9 @@ export async function handleSplitPhase(
   const phaseState = state.phases[phase]
   const maxFiles = adapters.config.maxFilesPerPhase
 
-  const fileCount = (phaseState.index ?? '').split('\n').filter((l) => l.trim()).length
+  const fileCount = (phaseState.index ?? '')
+    .split('\n')
+    .filter((l) => l.trim()).length
   if (fileCount <= maxFiles) {
     return state
   }
@@ -27,7 +29,9 @@ export async function handleSplitPhase(
 
   let subPhases: Array<{ title: string; brief: string }>
   try {
-    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    const text = result.text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
     subPhases = JSON.parse(text)
   } catch {
     console.warn('split-phase: failed to parse split result, skipping split')

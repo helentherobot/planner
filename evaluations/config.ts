@@ -32,7 +32,10 @@ const runnerConfig: RunnerConfig = {
       },
     },
   },
-  secrets: { google: process.env.GOOGLE_API_KEY, openAi: process.env.OPENAI_API_KEY },
+  secrets: {
+    google: process.env.GOOGLE_API_KEY,
+    openAi: process.env.OPENAI_API_KEY,
+  },
 }
 
 export const runner = new Runner(runnerConfig)

@@ -48,7 +48,11 @@ describe('handleGatherQuestions', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -67,8 +71,14 @@ describe('handleGatherQuestions', () => {
       run: vi.fn(async () => ({
         text: JSON.stringify({
           questions: [
-            { question: 'Which database?', context: 'Affects schema phase structure.' },
-            { question: 'Monorepo or separate repos?', context: 'Affects all phases.' },
+            {
+              question: 'Which database?',
+              context: 'Affects schema phase structure.',
+            },
+            {
+              question: 'Monorepo or separate repos?',
+              context: 'Affects all phases.',
+            },
           ],
         }),
         usage: { inputTokens: 20, outputTokens: 30, totalCostUsd: 0.001 },
@@ -79,7 +89,11 @@ describe('handleGatherQuestions', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -115,7 +129,11 @@ describe('handleGatherQuestions', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
       onUsage,
     }
@@ -143,7 +161,11 @@ describe('handleGatherQuestions', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 

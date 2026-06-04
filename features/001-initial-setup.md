@@ -496,7 +496,11 @@ The README must be a complete, working guide. A consumer should be able to read 
 
 ```ts
 // internal to src/store-helpers.ts, not exported
-function updatePhase(store: Store, index: number, update: Partial<PhaseState>): void {
+function updatePhase(
+  store: Store,
+  index: number,
+  update: Partial<PhaseState>,
+): void {
   const state = store.read() ?? createDefaultState()
   state.phases[index] = { ...state.phases[index], ...update }
   store.write(state)
@@ -510,7 +514,10 @@ function updateControl(
 ): void {
   const state = store.read() ?? createDefaultState()
   const phase = state.phases[phaseIndex]
-  phase.controls[name] = { ...(phase.controls[name] ?? { dismissed: [], raised: [] }), ...update }
+  phase.controls[name] = {
+    ...(phase.controls[name] ?? { dismissed: [], raised: [] }),
+    ...update,
+  }
   store.write(state)
 }
 ```

@@ -138,7 +138,9 @@ This feature will add cross-phase file context to planning and checking agents, 
    const crossPhaseBlock =
      otherPhases.length > 0
        ? 'Other phases already planned — avoid these files unless this phase specifically requires them:\n\n' +
-         otherPhases.map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`).join('\n\n') +
+         otherPhases
+           .map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`)
+           .join('\n\n') +
          '\n\n'
        : ''
 
@@ -309,7 +311,11 @@ This feature will add cross-phase file context to planning and checking agents, 
      await resolveProfile(adapters, task.type, control.checkRecipe.profile),
      control.checkRecipe,
      [{ phase, iteration, phaseState, controlState, otherPhases }],
-     { onUsage: adapters.onUsage, taskType: task.type, controlName: control.name },
+     {
+       onUsage: adapters.onUsage,
+       taskType: task.type,
+       controlName: control.name,
+     },
    )
    ```
 

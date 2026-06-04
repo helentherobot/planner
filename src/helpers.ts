@@ -1,5 +1,12 @@
 import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
-import type { Store, PlanState, PhaseState, ControlState, Task, Adapters } from './types.js'
+import type {
+  Store,
+  PlanState,
+  PhaseState,
+  ControlState,
+  Task,
+  Adapters,
+} from './types.js'
 
 type UsageCtx = {
   onUsage: Adapters['onUsage']
@@ -10,7 +17,9 @@ type UsageCtx = {
 export async function resolveProfile(
   adapters: {
     tools: { profile: string }
-    config: { taskProfiles?: Record<string, string | (() => string | Promise<string>)> }
+    config: {
+      taskProfiles?: Record<string, string | (() => string | Promise<string>)>
+    }
   },
   taskType: string,
   recipeProfile?: string,
@@ -23,7 +32,10 @@ export async function resolveProfile(
 
 export function resolveTools(
   adapters: {
-    tools: { tools: DiscoverableTool[]; taskTools?: Record<string, DiscoverableTool[]> }
+    tools: {
+      tools: DiscoverableTool[]
+      taskTools?: Record<string, DiscoverableTool[]>
+    }
   },
   taskType: string,
 ): DiscoverableTool[] {
@@ -51,12 +63,13 @@ export async function runRecipe<TArgs extends unknown[]>(
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
   'plan-phase',
-  'gather-phase-questions',
   'normalize-phase-plan',
   'index-phase',
   'split-phase',
   'check-phase',
   'collect-feedback',
+  'gather-phase-questions',
+  'resolve-phase-questions',
 ]
 
 export function expandPhases(phases: string[]): Task[] {
@@ -73,7 +86,10 @@ export function expandPhases(phases: string[]): Task[] {
   return tasks
 }
 
-export function readClaimedFiles(phases: PhaseState[], currentPhase: number): string[] {
+export function readClaimedFiles(
+  phases: PhaseState[],
+  currentPhase: number,
+): string[] {
   const claimed: string[] = []
 
   for (let i = 0; i < phases.length; i++) {
@@ -110,7 +126,11 @@ export function createInitialState(brief: string): PlanState {
   }
 }
 
-export function updatePhase(store: Store, index: number, update: Partial<PhaseState>): void {
+export function updatePhase(
+  store: Store,
+  index: number,
+  update: Partial<PhaseState>,
+): void {
   const state = store.read()
   if (!state) throw new Error('updatePhase: store has no state')
   state.phases[index] = { ...state.phases[index], ...update }
@@ -126,6 +146,9 @@ export function updateControl(
   const state = store.read()
   if (!state) throw new Error('updateControl: store has no state')
   const phase = state.phases[phaseIndex]
-  phase.controls[name] = { ...(phase.controls[name] ?? { dismissed: [], raised: [] }), ...update }
+  phase.controls[name] = {
+    ...(phase.controls[name] ?? { dismissed: [], raised: [] }),
+    ...update,
+  }
   store.write(state)
 }

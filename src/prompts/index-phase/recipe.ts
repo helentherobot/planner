@@ -1,8 +1,14 @@
 import type { PhaseState } from '../../types.js'
 
-export function prompt({ phaseState }: { phase: number; phaseState: PhaseState }): string {
+export function prompt({
+  phaseState,
+}: {
+  phase: number
+  phaseState: PhaseState
+}): string {
   return `
-    Extract a flat list of all file paths mentioned in the following implementation plan.
+    Extract a flat list of all file paths mentioned in the following
+    implementation plan.
 
     Plan:
     ${phaseState.brief}
@@ -13,6 +19,7 @@ export function prompt({ phaseState }: { phase: number; phaseState: PhaseState }
     - Paths should be relative to the project root (e.g. src/foo/bar.ts)
     - Do not include directories, only files
 
-    Output the list only, nothing else.
+    Output the list only, nothing else. Respond in plain text only —
+    no headings, no bold, no italic, no code fences.
   `
 }

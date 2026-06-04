@@ -12,15 +12,21 @@ import { handleCheckPhase } from './tasks/check-phase.js'
 import { handleInvestigatePhase } from './tasks/investigate-phase.js'
 import { handleRevisePhase } from './tasks/revise-phase.js'
 import { handleGatherPhaseQuestions } from './tasks/gather-phase-questions.js'
+import { handleResolvePhaseQuestions } from './tasks/resolve-phase-questions.js'
 import { handleCollectFeedback } from './tasks/collect-feedback.js'
 import { handleCleanup } from './tasks/cleanup.js'
 
-type TaskHandler = (task: Task, state: PlanState, adapters: Adapters) => Promise<PlanState>
+type TaskHandler = (
+  task: Task,
+  state: PlanState,
+  adapters: Adapters,
+) => Promise<PlanState>
 
 const handlers: Record<string, TaskHandler> = {
   'gather-recon': handleGatherRecon,
   'gather-questions': handleGatherQuestions,
   'gather-phase-questions': handleGatherPhaseQuestions,
+  'resolve-phase-questions': handleResolvePhaseQuestions,
   'synthesize-phases': handleSynthesizePhases,
   'normalize-phase-prompt': handleNormalizePhasePrompt,
   'plan-phase': handlePlanPhase,
@@ -44,11 +50,16 @@ export async function drainTasks(
 
   if (opts.answers?.length) {
     for (const answer of opts.answers) {
-      const question = current.awaitingQuestions.find((q) => q.id === answer.questionId)
+      const question = current.awaitingQuestions.find(
+        (q) => q.id === answer.questionId,
+      )
       if (question) {
         current = {
           ...current,
-          answeredQuestions: [...current.answeredQuestions, { ...question, answer: answer.answer }],
+          answeredQuestions: [
+            ...current.answeredQuestions,
+            { ...question, answer: answer.answer },
+          ],
         }
       }
     }
@@ -65,7 +76,10 @@ export async function drainTasks(
     const handler = handlers[task.type]
     if (!handler) {
       console.warn(`run: unknown task type "${task.type}", skipping`)
-      current = { ...current, completedTasks: [...current.completedTasks, task] }
+      current = {
+        ...current,
+        completedTasks: [...current.completedTasks, task],
+      }
       adapters.store.write(current)
       continue
     }
@@ -80,10 +94,15 @@ export async function drainTasks(
     adapters.store.write(current)
 
     if (current.awaitingQuestions.length > 0) {
-      return { status: 'needs-answers', questions: current.awaitingQuestions, state: current }
+      return {
+        status: 'needs-answers',
+        questions: current.awaitingQuestions,
+        state: current,
+      }
     }
 
-    const runningTotal = current.completedTasks.length + current.remainingTasks.length
+    const runningTotal =
+      current.completedTasks.length + current.remainingTasks.length
     await adapters.observer.update(current.progressHandle, {
       brief: current.brief,
       completedTasks: current.completedTasks,
@@ -101,11 +120,13 @@ export async function run(
   adapters: Adapters,
   options?: RunOptions | AbortSignal,
 ): Promise<RunResult> {
-  const opts: RunOptions = options instanceof AbortSignal ? { signal: options } : (options ?? {})
+  const opts: RunOptions =
+    options instanceof AbortSignal ? { signal: options } : (options ?? {})
 
   let current = state
 
-  const totalTasks = current.completedTasks.length + current.remainingTasks.length
+  const totalTasks =
+    current.completedTasks.length + current.remainingTasks.length
   const progressHandle = await adapters.observer.start({
     brief: current.brief,
     completedTasks: current.completedTasks,

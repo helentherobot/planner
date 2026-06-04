@@ -48,7 +48,11 @@ describe('handleSynthesizePhases', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
       onUsage,
     }
@@ -57,7 +61,10 @@ describe('handleSynthesizePhases', () => {
     await handleSynthesizePhases(task, state, adapters)
 
     expect(onUsage).toHaveBeenCalledWith(
-      expect.objectContaining({ taskType: 'synthesize-phases', inputTokens: 10 }),
+      expect.objectContaining({
+        taskType: 'synthesize-phases',
+        inputTokens: 10,
+      }),
     )
   })
 
@@ -76,25 +83,36 @@ describe('handleSynthesizePhases', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
     const task: Task = { type: 'synthesize-phases' }
-    await expect(handleSynthesizePhases(task, state, adapters)).resolves.not.toThrow()
+    await expect(
+      handleSynthesizePhases(task, state, adapters),
+    ).resolves.not.toThrow()
   })
 
   it('includes resolved decisions section when answeredQuestions is non-empty', async () => {
     const state = {
       ...makeState(),
-      answeredQuestions: [{ id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' }],
+      answeredQuestions: [
+        { id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' },
+      ],
     }
     const store = makeStore(state)
     let capturedPrompt = ''
 
     const runner = {
       run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
+        async (
+          recipe: { profile: string; prompt: (ctx: unknown) => string },
+          args: unknown[],
+        ) => {
           capturedPrompt = recipe.prompt(args[0])
           return {
             text: '1. Phase One',
@@ -108,7 +126,11 @@ describe('handleSynthesizePhases', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -126,7 +148,10 @@ describe('handleSynthesizePhases', () => {
 
     const runner = {
       run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
+        async (
+          recipe: { profile: string; prompt: (ctx: unknown) => string },
+          args: unknown[],
+        ) => {
           capturedPrompt = recipe.prompt(args[0])
           return {
             text: '1. Phase One',
@@ -140,7 +165,11 @@ describe('handleSynthesizePhases', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 

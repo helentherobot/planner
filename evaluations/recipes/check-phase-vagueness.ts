@@ -25,8 +25,16 @@ function makeAdapters(state: PlanState): Adapters {
         writeFileSync(stateFile, JSON.stringify(s))
       },
     },
-    observer: { start: async () => null, update: async () => {}, complete: async () => {} },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    observer: {
+      start: async () => null,
+      update: async () => {},
+      complete: async () => {},
+    },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [defaultControls.find((c) => c.name === 'vagueness')!],
   }
 }
@@ -68,7 +76,11 @@ for (const fixture of fixtures.vagueness) {
     raised: [],
   })
   const adapters = makeAdapters(state)
-  const result = await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+  const result = await handleCheckPhase(
+    { type: 'check-phase', phase: 0 },
+    state,
+    adapters,
+  )
   const raised = result.phases[0]?.controls?.vagueness?.raised ?? []
 
   console.log(`Fixture: ${fixture.name}`)

@@ -19,7 +19,11 @@ export const duplicationControl: QualityControl = {
   investigateRecipe: { profile: '', prompt: duplicationInvestigation },
 }
 
-function addToIndex(dismissed: ControlFinding[], phase: number, store: Store): void {
+function addToIndex(
+  dismissed: ControlFinding[],
+  phase: number,
+  store: Store,
+): void {
   const state = store.read()
   if (!state) return
   const phaseState = state.phases[phase]

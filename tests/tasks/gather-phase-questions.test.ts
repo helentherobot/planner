@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handleGatherPhaseQuestions } from '../../src/tasks/gather-phase-questions.js'
-import type { PlanState, Task, PhaseState, PhaseQuestion } from '../../src/types.js'
+import type {
+  PlanState,
+  Task,
+  PhaseState,
+  PhaseQuestion,
+} from '../../src/types.js'
 import type { Adapters } from '../../src/types.js'
 import type { Store } from '../../src/types.js'
 
@@ -51,7 +56,11 @@ function makeAdapters(state: PlanState, runnerResult: object): Adapters {
     tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
     store: makeStore(state),
     observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [],
   }
 }
@@ -78,7 +87,10 @@ describe('handleGatherPhaseQuestions', () => {
     const adapters = makeAdapters(state, {
       text: JSON.stringify({
         questions: [
-          { question: 'Which auth strategy?', context: 'Affects implementation approach.' },
+          {
+            question: 'Which auth strategy?',
+            context: 'Affects implementation approach.',
+          },
           { question: 'Cache needed?', context: 'Changes phase complexity.' },
         ],
       }),
@@ -112,7 +124,9 @@ describe('handleGatherPhaseQuestions', () => {
     const state = makeState({ pendingQuestions: [existing] })
     const adapters = makeAdapters(state, {
       text: JSON.stringify({
-        questions: [{ question: 'Which auth strategy?', context: 'Affects approach.' }],
+        questions: [
+          { question: 'Which auth strategy?', context: 'Affects approach.' },
+        ],
       }),
       usage: defaultUsage,
     })
@@ -180,7 +194,11 @@ describe('handleGatherPhaseQuestions', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store: makeStore(state),
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
       onUsage,
     }
@@ -189,7 +207,10 @@ describe('handleGatherPhaseQuestions', () => {
     await handleGatherPhaseQuestions(task, state, adapters)
 
     expect(onUsage).toHaveBeenCalledWith(
-      expect.objectContaining({ taskType: 'gather-phase-questions', inputTokens: 10 }),
+      expect.objectContaining({
+        taskType: 'gather-phase-questions',
+        inputTokens: 10,
+      }),
     )
   })
 

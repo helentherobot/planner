@@ -31,20 +31,27 @@ export async function handlePlanPhase(
       ? [
           '## Resolved decisions',
           'The following questions have been answered — treat these as settled decisions:',
-          ...state.answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
+          ...state.answeredQuestions.map(
+            (q) => `Q: ${q.question}\nA: ${q.answer}`,
+          ),
           '',
         ].join('\n')
       : ''
 
   const userMessage =
-    answeredQuestionsBlock + crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)
+    answeredQuestionsBlock +
+    crossPhaseBlock +
+    (phaseState.prompt ?? phaseState.brief)
 
   const result = await send(
     adapters.tools.runner,
     {
       profile: await resolveProfile(adapters, task.type),
       systemPrompt,
-      tools: [makePlanReadPhase(adapters.store, phase), ...resolveTools(adapters, task.type)],
+      tools: [
+        makePlanReadPhase(adapters.store, phase),
+        ...resolveTools(adapters, task.type),
+      ],
       maxSteps: 20,
     },
     [userMessage],

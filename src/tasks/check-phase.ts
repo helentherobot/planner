@@ -1,4 +1,10 @@
-import type { Task, PlanState, ControlState, ControlFinding, OtherPhaseContext } from '../types.js'
+import type {
+  Task,
+  PlanState,
+  ControlState,
+  ControlFinding,
+  OtherPhaseContext,
+} from '../types.js'
 
 import type { Adapters } from '../types.js'
 import { resolveProfile, runRecipe, updateControl } from '../helpers.js'
@@ -27,7 +33,11 @@ export async function handleCheckPhase(
         await resolveProfile(adapters, task.type, control.checkRecipe.profile),
         control.checkRecipe,
         [{ phase, iteration, phaseState, controlState, otherPhases }],
-        { onUsage: adapters.onUsage, taskType: task.type, controlName: control.name },
+        {
+          onUsage: adapters.onUsage,
+          taskType: task.type,
+          controlName: control.name,
+        },
       )
 
       let parsed: { findings: ControlFinding[] }
@@ -38,7 +48,9 @@ export async function handleCheckPhase(
           .replace(/\s*```$/, '')
         parsed = JSON.parse(text)
       } catch {
-        console.warn(`check-phase: failed to parse result for control "${control.name}"`)
+        console.warn(
+          `check-phase: failed to parse result for control "${control.name}"`,
+        )
         return
       }
 
@@ -62,7 +74,8 @@ export async function handleCheckPhase(
     const alreadyQueued = state.remainingTasks.some(
       (t) => t.type === 'investigate-phase' && t.phase === phase,
     )
-    if (alreadyQueued) return { ...updatedState, remainingTasks: state.remainingTasks }
+    if (alreadyQueued)
+      return { ...updatedState, remainingTasks: state.remainingTasks }
     const investigateTask: Task = { type: 'investigate-phase', phase }
     return {
       ...updatedState,

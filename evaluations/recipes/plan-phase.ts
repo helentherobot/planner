@@ -46,7 +46,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -55,7 +59,11 @@ console.log(`plan-phase — profile: ${profileName}`)
 console.log('Phase:', phase.title)
 console.log()
 
-const result = await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+const result = await handlePlanPhase(
+  { type: 'plan-phase', phase: 0 },
+  state,
+  adapters,
+)
 
 console.log('Planned brief:')
 console.log(result.phases[0].brief)

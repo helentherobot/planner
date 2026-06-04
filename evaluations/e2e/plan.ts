@@ -1,8 +1,20 @@
-import { mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
+import {
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+} from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { run, defaultControls, createInitialState } from '../../src/index.ts'
-import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '../../src/index.ts'
+import type {
+  Store,
+  Observer,
+  PlanState,
+  ProgressEvent,
+  Adapters,
+} from '../../src/index.ts'
 import { makeDiscoverable } from '../../src/tools/helpers.ts'
 import { runner, profileNames, defaultProfile, prompts } from '../config.ts'
 
@@ -15,7 +27,8 @@ function parseArgs() {
   const answers: Array<{ questionId: string; answer: string }> = []
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--size' && args[i + 1]) size = args[++i] as keyof typeof prompts
+    if (args[i] === '--size' && args[i + 1])
+      size = args[++i] as keyof typeof prompts
     if (args[i] === '--min' && args[i + 1]) min = parseInt(args[++i], 10)
     if (args[i] === '--max' && args[i + 1]) max = parseInt(args[++i], 10)
     if (args[i] === '--profile' && args[i + 1]) profileName = args[++i]
@@ -39,7 +52,9 @@ if (!profileName || !profileNames.includes(profileName)) {
 }
 
 if (!prompts[size]) {
-  console.error(`Unknown size "${size}". Valid: ${Object.keys(prompts).join(', ')}`)
+  console.error(
+    `Unknown size "${size}". Valid: ${Object.keys(prompts).join(', ')}`,
+  )
   process.exit(1)
 }
 
@@ -100,7 +115,12 @@ const fileTools = [
     'Read the contents of a file in the codebase.',
     {
       type: 'object',
-      properties: { path: { type: 'string', description: 'Absolute or cwd-relative file path' } },
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Absolute or cwd-relative file path',
+        },
+      },
       required: ['path'],
     },
     async ({ path }) => {
@@ -117,7 +137,10 @@ const fileTools = [
     {
       type: 'object',
       properties: {
-        path: { type: 'string', description: 'Absolute or cwd-relative directory path' },
+        path: {
+          type: 'string',
+          description: 'Absolute or cwd-relative directory path',
+        },
       },
       required: ['path'],
     },
@@ -164,7 +187,11 @@ const adapters: Adapters = {
 const brief = prompts[size]
 
 let state = store.read() ?? createInitialState(brief)
-let result = await run(state, adapters, answers.length > 0 ? { answers } : undefined)
+let result = await run(
+  state,
+  adapters,
+  answers.length > 0 ? { answers } : undefined,
+)
 
 while (result.status === 'needs-answers') {
   console.log()
@@ -175,7 +202,9 @@ while (result.status === 'needs-answers') {
   }
   console.log()
   console.log(`Re-run with --answer flags to resume, e.g.:`)
-  const flags = result.questions.map((q) => `--answer ${q.id} "your answer"`).join(' ')
+  const flags = result.questions
+    .map((q) => `--answer ${q.id} "your answer"`)
+    .join(' ')
   console.log(`  tsx evaluations/e2e/plan.ts --size ${size} ${flags}`)
   process.exit(0)
 }
@@ -192,7 +221,9 @@ if (finalState.pendingQuestions.length > 0) {
   console.log()
   console.log(`Pending questions (${finalState.pendingQuestions.length}):`)
   for (const q of finalState.pendingQuestions) {
-    const phases = Array.isArray(q.phaseIndex) ? q.phaseIndex.join(', ') : q.phaseIndex
+    const phases = Array.isArray(q.phaseIndex)
+      ? q.phaseIndex.join(', ')
+      : q.phaseIndex
     console.log(`  [${q.id}] Phase ${phases}: ${q.question}`)
     if (q.context) console.log(`       Context: ${q.context}`)
   }

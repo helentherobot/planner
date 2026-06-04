@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { PlanState, PhaseQuestion, PhaseState, Adapters, Store } from '../src/types.js'
+import type {
+  PlanState,
+  PhaseQuestion,
+  PhaseState,
+  Adapters,
+  Store,
+} from '../src/types.js'
 
 vi.mock('../src/run.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/run.js')>()
   return {
     ...actual,
-    drainTasks: vi.fn(async (state: PlanState) => ({ status: 'complete' as const, state })),
+    drainTasks: vi.fn(async (state: PlanState) => ({
+      status: 'complete' as const,
+      state,
+    })),
   }
 })
 
@@ -30,7 +39,11 @@ function makeState(overrides: Partial<PlanState> = {}): PlanState {
     completedAt: null,
     currentTask: null,
     progressHandle: null,
-    phases: [makePhaseState('Phase A'), makePhaseState('Phase B'), makePhaseState('Phase C')],
+    phases: [
+      makePhaseState('Phase A'),
+      makePhaseState('Phase B'),
+      makePhaseState('Phase C'),
+    ],
     remainingTasks: [],
     completedTasks: [],
     awaitingQuestions: [],
@@ -59,7 +72,11 @@ function makeAdapters(state: PlanState, runnerResult: object): Adapters {
     tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
     store: makeStore(state),
     observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [],
   }
 }
@@ -88,7 +105,8 @@ describe('revise', () => {
     await revise(state, adapters, pendingQuestion, 'Yes, use Redis.')
 
     expect(adapters.tools.runner.run).toHaveBeenCalledOnce()
-    const callArg = (adapters.tools.runner.run as ReturnType<typeof vi.fn>).mock.calls[0][1][0]
+    const callArg = (adapters.tools.runner.run as ReturnType<typeof vi.fn>).mock
+      .calls[0][1][0]
     expect(callArg.question).toMatchObject({
       id: '1-0',
       question: 'Should we use Redis for caching?',
@@ -132,7 +150,10 @@ describe('revise', () => {
 
     const tasksForPhase1 = phaseTaskOrder.map((type) => ({ type, phase: 1 }))
     const tasksForPhase2 = phaseTaskOrder.map((type) => ({ type, phase: 2 }))
-    expect(calledState.remainingTasks).toEqual([...tasksForPhase1, ...tasksForPhase2])
+    expect(calledState.remainingTasks).toEqual([
+      ...tasksForPhase1,
+      ...tasksForPhase2,
+    ])
   })
 
   it('handles phaseIndex as an array', async () => {
@@ -153,7 +174,10 @@ describe('revise', () => {
 
     const tasksForPhase0 = phaseTaskOrder.map((type) => ({ type, phase: 0 }))
     const tasksForPhase1 = phaseTaskOrder.map((type) => ({ type, phase: 1 }))
-    expect(calledState.remainingTasks).toEqual([...tasksForPhase0, ...tasksForPhase1])
+    expect(calledState.remainingTasks).toEqual([
+      ...tasksForPhase0,
+      ...tasksForPhase1,
+    ])
   })
 
   it('moves the question from pendingQuestions to answeredQuestions', async () => {
@@ -189,8 +213,8 @@ describe('revise', () => {
     expect(adapters.store.write).toHaveBeenCalled()
 
     const drainMock = drainTasks as ReturnType<typeof vi.fn>
-    const writeCallOrder = (adapters.store.write as ReturnType<typeof vi.fn>).mock
-      .invocationCallOrder[0]
+    const writeCallOrder = (adapters.store.write as ReturnType<typeof vi.fn>)
+      .mock.invocationCallOrder[0]
     const drainCallOrder = drainMock.mock.invocationCallOrder[0]
     expect(writeCallOrder).toBeLessThan(drainCallOrder)
   })
@@ -226,7 +250,12 @@ describe('revise', () => {
       usage: defaultUsage,
     })
 
-    const result = await revise(state, adapters, pendingQuestion, 'Yes, use Redis.')
+    const result = await revise(
+      state,
+      adapters,
+      pendingQuestion,
+      'Yes, use Redis.',
+    )
 
     expect(result).toBe(finalState)
   })
@@ -261,9 +290,9 @@ describe('revise', () => {
       usage: defaultUsage,
     })
 
-    await expect(revise(state, adapters, pendingQuestion, 'Yes.')).rejects.toThrow(
-      'unexpected needs-answers',
-    )
+    await expect(
+      revise(state, adapters, pendingQuestion, 'Yes.'),
+    ).rejects.toThrow('unexpected needs-answers')
   })
 
   it('deduplicates phases when additionalPhases overlaps with directPhaseIndex', async () => {

@@ -27,7 +27,9 @@ export async function revise(
 
   let parsed: { additionalPhases: number[] }
   try {
-    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    const text = result.text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
     parsed = JSON.parse(text)
   } catch {
     parsed = { additionalPhases: [] }
@@ -38,17 +40,25 @@ export async function revise(
     : [question.phaseIndex]
   const additionalPhases: number[] = parsed.additionalPhases ?? []
 
-  const allAffected = [...new Set([...directPhases, ...additionalPhases])].sort((a, b) => a - b)
+  const allAffected = [...new Set([...directPhases, ...additionalPhases])].sort(
+    (a, b) => a - b,
+  )
 
   const alreadyQueued = new Set(
-    state.remainingTasks.filter((t) => t.phase !== undefined).map((t) => t.phase),
+    state.remainingTasks
+      .filter((t) => t.phase !== undefined)
+      .map((t) => t.phase),
   )
 
   const newTasks = allAffected
     .filter((phaseIndex) => !alreadyQueued.has(phaseIndex))
-    .flatMap((phaseIndex) => phaseTaskOrder.map((type) => ({ type, phase: phaseIndex })))
+    .flatMap((phaseIndex) =>
+      phaseTaskOrder.map((type) => ({ type, phase: phaseIndex })),
+    )
 
-  const updatedPending = state.pendingQuestions.filter((q) => q.id !== question.id)
+  const updatedPending = state.pendingQuestions.filter(
+    (q) => q.id !== question.id,
+  )
   const answeredQuestion = { ...question, answer }
 
   let current: PlanState = {
@@ -60,7 +70,9 @@ export async function revise(
 
   adapters.store.write(current)
 
-  const drainResult = await drainTasks(current, adapters, { signal: options?.signal })
+  const drainResult = await drainTasks(current, adapters, {
+    signal: options?.signal,
+  })
 
   if (drainResult.status === 'needs-answers') {
     throw new Error(

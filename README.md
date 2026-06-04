@@ -89,7 +89,12 @@ const runner = new Runner({
       model: 'claude-sonnet-4-5',
       contextWindowTokens: 200000,
       requestTimeoutMs: 120000,
-      queue: { maxConcurrent: 2, requestsPerMinute: 50, affinityMode: false, warmup: false },
+      queue: {
+        maxConcurrent: 2,
+        requestsPerMinute: 50,
+        affinityMode: false,
+        warmup: false,
+      },
     },
   },
   secrets: { anthropic: process.env.ANTHROPIC_API_KEY },
@@ -105,6 +110,7 @@ const adapters: Adapters = {
       // optional: per-task tool overrides
       'gather-recon': [readFileTool, listDirectoryTool],
       'plan-phase': [readFileTool],
+      'resolve-phase-questions': [readFileTool, listDirectoryTool],
     },
   },
   store,
@@ -180,7 +186,9 @@ When `onUsage` is not provided, behaviour is identical to before — no errors, 
 import { run, createInitialState } from '@helentherobot/planner'
 
 const result = await run(
-  createInitialState('Add OAuth2 login with GitHub and Google to the existing Express app.'),
+  createInitialState(
+    'Add OAuth2 login with GitHub and Google to the existing Express app.',
+  ),
   adapters,
 )
 
@@ -278,7 +286,7 @@ Passing an `AbortSignal` directly (without wrapping in `RunOptions`) is also acc
 
 ## Per-phase questions and `revise()`
 
-After synthesis, each phase is individually planned. If the model surfaces a question that is specific to a single phase (or a small set of phases), it is collected as a `PhaseQuestion` in `state.pendingQuestions` rather than halting the whole run. The full plan completes, and the per-phase questions are available afterward for the consumer to address one at a time.
+After synthesis, each phase is individually planned. If the model surfaces a question that is specific to a single phase (or a small set of phases), it is collected as a `PhaseQuestion` in `state.pendingQuestions` rather than halting the whole run. Once all phases are planned, `resolve-phase-questions` runs automatically and searches the codebase (`CLAUDE.md`, `README.md`, source files) for unambiguous answers. Questions it can answer with certainty are moved to `state.answeredQuestions`; questions where relevant context was found but the answer is uncertain are left in `pendingQuestions` with an enriched `context` field. The full plan completes, and any remaining per-phase questions are available afterward for the consumer to address one at a time.
 
 ```ts
 import { revise } from '@helentherobot/planner'
@@ -356,7 +364,9 @@ const consistencyControl: QualityControl = {
   checkRecipe: {
     profile: '',
     prompt: ({ phaseState, controlState }) => {
-      const dismissed = controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')
+      const dismissed = controlState.dismissed
+        .map((d) => `${d.path} — ${d.reason}`)
+        .join('\n')
       const cleared =
         controlState.dismissed.length > 0
           ? `Previously cleared — do not re-flag:\n${dismissed}`
