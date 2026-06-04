@@ -30,11 +30,13 @@ const state: PlanState = {
       id: 'recon-0',
       question:
         'Will a message queue be used, or will notifications be written directly to the database?',
-      context: 'This determines whether a queue infrastructure phase is needed.',
+      context:
+        'This determines whether a queue infrastructure phase is needed.',
     },
     {
       id: 'recon-1',
-      question: 'Are real-time push notifications required, or will polling suffice?',
+      question:
+        'Are real-time push notifications required, or will polling suffice?',
       context: 'Real-time push requires a dedicated infrastructure phase.',
     },
   ],
@@ -78,8 +80,14 @@ const adapters: Adapters = {
 }
 
 const answers = [
-  { questionId: 'recon-0', answer: 'Direct database writes — no queue needed for now.' },
-  { questionId: 'recon-1', answer: 'Polling is fine — no real-time push required.' },
+  {
+    questionId: 'recon-0',
+    answer: 'Direct database writes — no queue needed for now.',
+  },
+  {
+    questionId: 'recon-1',
+    answer: 'Polling is fine — no real-time push required.',
+  },
 ]
 
 console.log(`run-with-answers — profile: ${profileName}`)
@@ -117,7 +125,9 @@ if (final.pendingQuestions.length > 0) {
   console.log()
   console.log(`Pending questions (${final.pendingQuestions.length}):`)
   for (const q of final.pendingQuestions) {
-    const phases = Array.isArray(q.phaseIndex) ? q.phaseIndex.join(', ') : q.phaseIndex
+    const phases = Array.isArray(q.phaseIndex)
+      ? q.phaseIndex.join(', ')
+      : q.phaseIndex
     console.log(`  [${q.id}] Phase ${phases}: ${q.question}`)
   }
 }

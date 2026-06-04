@@ -52,7 +52,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }

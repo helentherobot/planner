@@ -14,7 +14,9 @@ if (!profileName) {
 
 const stateFile = join(tmpdir(), `eval-investigate-scope-${Date.now()}.json`)
 
-const flagsFixture = fixtures.scope.find((f) => f.name === 'flags-out-of-scope-files')!
+const flagsFixture = fixtures.scope.find(
+  (f) => f.name === 'flags-out-of-scope-files',
+)!
 
 const phase: PhaseState = {
   title: 'Add user avatar upload',
@@ -60,7 +62,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
   controls: [defaultControls.find((c) => c.name === 'scope')!],
 }
@@ -78,5 +84,7 @@ const scope = result.phases[0].controls.scope
 console.log(`Raised after investigation: ${scope?.raised.length ?? 0}`)
 console.log(`Dismissed after investigation: ${scope?.dismissed.length ?? 0}`)
 if (scope?.dismissed.length) {
-  scope.dismissed.forEach((d) => console.log(`  Dismissed: ${d.path} — ${d.reason}`))
+  scope.dismissed.forEach((d) =>
+    console.log(`  Dismissed: ${d.path} — ${d.reason}`),
+  )
 }

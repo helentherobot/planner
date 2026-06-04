@@ -22,8 +22,16 @@ function makeAdapters(state: PlanState): Adapters {
         stored = s
       },
     },
-    observer: { start: async () => null, update: async () => {}, complete: async () => {} },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    observer: {
+      start: async () => null,
+      update: async () => {},
+      complete: async () => {},
+    },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [defaultControls.find((c) => c.name === 'duplication')!],
   }
 }
@@ -65,7 +73,11 @@ for (const fixture of fixtures.duplication) {
     raised: [],
   })
   const adapters = makeAdapters(state)
-  const result = await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+  const result = await handleCheckPhase(
+    { type: 'check-phase', phase: 0 },
+    state,
+    adapters,
+  )
   const raised = result.phases[0]?.controls?.duplication?.raised ?? []
 
   console.log(`Fixture: ${fixture.name}`)

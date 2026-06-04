@@ -58,10 +58,18 @@ describe('handleSplitPhase', () => {
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       controls: [],
-      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 2,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
     }
 
-    const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+    const result = await handleSplitPhase(
+      { type: 'split-phase', phase: 0 },
+      state,
+      adapters,
+    )
 
     expect(runner.run).not.toHaveBeenCalled()
     expect(result.phases).toHaveLength(1)
@@ -85,10 +93,18 @@ describe('handleSplitPhase', () => {
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       controls: [],
-      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 2,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
     }
 
-    const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+    const result = await handleSplitPhase(
+      { type: 'split-phase', phase: 0 },
+      state,
+      adapters,
+    )
 
     expect(result.phases).toHaveLength(2)
     expect(result.phases[0].title).toBe('Phase A')
@@ -115,7 +131,11 @@ describe('handleSplitPhase', () => {
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       controls: [],
-      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 2,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       onUsage,
     }
 
@@ -139,7 +159,11 @@ describe('handleSplitPhase', () => {
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       controls: [],
-      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 2,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       onUsage,
     }
 
@@ -166,10 +190,18 @@ describe('handleSplitPhase', () => {
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       controls: [],
-      config: { maxFilesPerPhase: 2, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 2,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
     }
 
-    const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+    const result = await handleSplitPhase(
+      { type: 'split-phase', phase: 0 },
+      state,
+      adapters,
+    )
 
     expect(result.remainingTasks.length).toBeGreaterThan(0)
     expect(result.remainingTasks.some((t) => t.phase === 0)).toBe(true)

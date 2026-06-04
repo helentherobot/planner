@@ -82,7 +82,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 8, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -91,7 +95,11 @@ console.log(`split-phase — profile: ${profileName}`)
 console.log(`Max files: ${adapters.config.maxFilesPerPhase}`)
 console.log()
 
-const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
+const result = await handleSplitPhase(
+  { type: 'split-phase', phase: 0 },
+  state,
+  adapters,
+)
 
 console.log(`Phases after split: ${result.phases.length}`)
 for (let i = 0; i < result.phases.length; i++) {

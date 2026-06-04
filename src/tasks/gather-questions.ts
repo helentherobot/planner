@@ -12,13 +12,21 @@ export async function handleGatherQuestions(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
-    [{ brief: state.brief, recon: state.recon, answeredQuestions: state.answeredQuestions }],
+    [
+      {
+        brief: state.brief,
+        recon: state.recon,
+        answeredQuestions: state.answeredQuestions,
+      },
+    ],
     { onUsage: adapters.onUsage, taskType: task.type },
   )
 
   let parsed: { questions: Array<{ question: string; context?: string }> }
   try {
-    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    const text = result.text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
     parsed = JSON.parse(text)
   } catch {
     return state

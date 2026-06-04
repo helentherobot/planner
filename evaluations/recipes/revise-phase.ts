@@ -25,8 +25,14 @@ Steps:
   controls: {
     vagueness: {
       raised: [
-        { path: 'somewhere in the middleware folder', reason: 'no specific file path given' },
-        { path: 'Configure the limits as needed', reason: 'no specific values given' },
+        {
+          path: 'somewhere in the middleware folder',
+          reason: 'no specific file path given',
+        },
+        {
+          path: 'Configure the limits as needed',
+          reason: 'no specific values given',
+        },
       ],
       dismissed: [],
     },
@@ -60,7 +66,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -68,7 +78,11 @@ const adapters: Adapters = {
 console.log(`revise-phase — profile: ${profileName}`)
 console.log()
 
-const result = await handleRevisePhase({ type: 'revise-phase', phase: 0 }, state, adapters)
+const result = await handleRevisePhase(
+  { type: 'revise-phase', phase: 0 },
+  state,
+  adapters,
+)
 
 console.log('Revised brief:')
 console.log(result.phases[0].brief)

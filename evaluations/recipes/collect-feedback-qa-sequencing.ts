@@ -46,8 +46,16 @@ function makeAdapters(state: PlanState): Adapters {
         stored = s
       },
     },
-    observer: { start: async () => null, update: async () => {}, complete: async () => {} },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    observer: {
+      start: async () => null,
+      update: async () => {},
+      complete: async () => {},
+    },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [],
   }
 }
@@ -81,7 +89,9 @@ console.log()
   console.log(
     `  resolve-phase-questions survived: ${resolveSurvived ? 'yes (correct)' : 'NO — stripped (bug)'}`,
   )
-  console.log(`  remainingTasks: [${result.remainingTasks.map((t) => t.type).join(', ')}]`)
+  console.log(
+    `  remainingTasks: [${result.remainingTasks.map((t) => t.type).join(', ')}]`,
+  )
   console.log()
 }
 
@@ -105,8 +115,12 @@ console.log()
 
   const result = await handleCollectFeedback(task, state, adapters)
 
-  const hasGather = result.remainingTasks.some((t) => t.type === 'gather-phase-questions')
-  const hasResolve = result.remainingTasks.some((t) => t.type === 'resolve-phase-questions')
+  const hasGather = result.remainingTasks.some(
+    (t) => t.type === 'gather-phase-questions',
+  )
+  const hasResolve = result.remainingTasks.some(
+    (t) => t.type === 'resolve-phase-questions',
+  )
 
   console.log('Scenario 2: issues raised — Branch 1 re-queue')
   console.log(
@@ -115,6 +129,8 @@ console.log()
   console.log(
     `  resolve-phase-questions in re-queue: ${hasResolve ? 'YES — re-queued (bug)' : 'no (correct)'}`,
   )
-  console.log(`  queued task types: [${result.remainingTasks.map((t) => t.type).join(', ')}]`)
+  console.log(
+    `  queued task types: [${result.remainingTasks.map((t) => t.type).join(', ')}]`,
+  )
   console.log()
 }

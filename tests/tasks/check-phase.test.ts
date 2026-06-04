@@ -64,7 +64,9 @@ describe('handleCheckPhase', () => {
       run: vi.fn(async () => {
         callCount++
         return {
-          text: JSON.stringify({ findings: [{ path: 'some step', reason: 'too vague' }] }),
+          text: JSON.stringify({
+            findings: [{ path: 'some step', reason: 'too vague' }],
+          }),
           usage: { inputTokens: 0, outputTokens: 0, totalCostUsd: 0 },
         }
       }),
@@ -74,11 +76,19 @@ describe('handleCheckPhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [control1, control2],
     }
 
-    const result = await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+    const result = await handleCheckPhase(
+      { type: 'check-phase', phase: 0 },
+      state,
+      adapters,
+    )
 
     expect(callCount).toBe(2)
     expect(result.remainingTasks[0]?.type).toBe('investigate-phase')
@@ -106,11 +116,19 @@ describe('handleCheckPhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [control],
     }
 
-    const result = await handleCheckPhase({ type: 'check-phase', phase: 0 }, state, adapters)
+    const result = await handleCheckPhase(
+      { type: 'check-phase', phase: 0 },
+      state,
+      adapters,
+    )
 
     expect(result.remainingTasks).toHaveLength(0)
   })
@@ -137,7 +155,11 @@ describe('handleCheckPhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [control],
     }
 
@@ -177,7 +199,11 @@ describe('handleCheckPhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [control1, control2],
       onUsage,
     }
@@ -193,12 +219,19 @@ describe('handleCheckPhase', () => {
       }),
     )
     expect(onUsage).toHaveBeenCalledWith(
-      expect.objectContaining({ taskType: 'check-phase', controlName: 'scope', inputTokens: 10 }),
+      expect.objectContaining({
+        taskType: 'check-phase',
+        controlName: 'scope',
+        inputTokens: 10,
+      }),
     )
   })
 
   it('passes otherPhases containing indexed sibling phases to the recipe context', async () => {
-    const phase0 = makePhaseState({ title: 'Setup', index: 'src/setup.ts\nsrc/config.ts' })
+    const phase0 = makePhaseState({
+      title: 'Setup',
+      index: 'src/setup.ts\nsrc/config.ts',
+    })
     const phase1 = makePhaseState({ title: 'Feature' })
     const state = makeState([phase0, phase1])
     const store = makeStore(state)
@@ -220,7 +253,11 @@ describe('handleCheckPhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [control],
     }
 

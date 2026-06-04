@@ -12,9 +12,14 @@ if (!profileName) {
   process.exit(1)
 }
 
-const stateFile = join(tmpdir(), `eval-investigate-vagueness-${Date.now()}.json`)
+const stateFile = join(
+  tmpdir(),
+  `eval-investigate-vagueness-${Date.now()}.json`,
+)
 
-const flagsFixture = fixtures.vagueness.find((f) => f.name === 'flags-vague-steps')!
+const flagsFixture = fixtures.vagueness.find(
+  (f) => f.name === 'flags-vague-steps',
+)!
 
 const phase: PhaseState = {
   title: 'API rate limiting',
@@ -23,7 +28,10 @@ const phase: PhaseState = {
     vagueness: {
       dismissed: [],
       raised: [
-        { path: 'Configure the limits appropriately', reason: 'no specific values given' },
+        {
+          path: 'Configure the limits appropriately',
+          reason: 'no specific values given',
+        },
         {
           path: 'Handle errors in a reasonable way',
           reason: 'no specific status codes or messages defined',
@@ -60,7 +68,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
   controls: [defaultControls.find((c) => c.name === 'vagueness')!],
 }
@@ -76,7 +88,11 @@ const result = await handleInvestigatePhase(
 const vagueness = result.phases[0].controls.vagueness
 
 console.log(`Raised after investigation: ${vagueness?.raised.length ?? 0}`)
-console.log(`Dismissed after investigation: ${vagueness?.dismissed.length ?? 0}`)
+console.log(
+  `Dismissed after investigation: ${vagueness?.dismissed.length ?? 0}`,
+)
 if (vagueness?.dismissed.length) {
-  vagueness.dismissed.forEach((d) => console.log(`  Dismissed: ${d.path} — ${d.reason}`))
+  vagueness.dismissed.forEach((d) =>
+    console.log(`  Dismissed: ${d.path} — ${d.reason}`),
+  )
 }

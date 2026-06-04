@@ -52,7 +52,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
@@ -60,7 +64,11 @@ const adapters: Adapters = {
 console.log(`index-phase — profile: ${profileName}`)
 console.log()
 
-const result = await handleIndexPhase({ type: 'index-phase', phase: 0 }, state, adapters)
+const result = await handleIndexPhase(
+  { type: 'index-phase', phase: 0 },
+  state,
+  adapters,
+)
 
 console.log('File index:')
 console.log(result.phases[0].index ?? '(none)')

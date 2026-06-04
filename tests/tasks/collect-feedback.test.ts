@@ -42,7 +42,10 @@ function makeStore(state: PlanState): Store {
   }
 }
 
-function makeAdapters(state: PlanState, controls: QualityControl[] = []): Adapters {
+function makeAdapters(
+  state: PlanState,
+  controls: QualityControl[] = [],
+): Adapters {
   return {
     tools: {
       runner: {} as Adapters['tools']['runner'],
@@ -53,7 +56,11 @@ function makeAdapters(state: PlanState, controls: QualityControl[] = []): Adapte
     store: makeStore(state),
     observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
     controls,
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
   }
 }
 
@@ -102,8 +109,12 @@ describe('handleCollectFeedback', () => {
 
     expect(result.remainingTasks[0]?.type).toBe('revise-phase')
     expect(result.remainingTasks[1]?.type).toBe('check-phase')
-    expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
-    expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+      'gather-phase-questions',
+    )
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+      'resolve-phase-questions',
+    )
   })
 
   it('does not strip gather-phase-questions or resolve-phase-questions on clean exit', async () => {
@@ -122,7 +133,9 @@ describe('handleCollectFeedback', () => {
   it('does not re-queue gather-phase-questions or resolve-phase-questions when issues are raised', async () => {
     const phase = makePhaseState({
       iterations: 1,
-      controls: { vagueness: { dismissed: [], raised: ['Something is vague'] } },
+      controls: {
+        vagueness: { dismissed: [], raised: ['Something is vague'] },
+      },
     })
     const state = makeState([phase])
     const control: QualityControl = {
@@ -134,7 +147,11 @@ describe('handleCollectFeedback', () => {
 
     const result = await handleCollectFeedback(task, state, adapters)
 
-    expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
-    expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+      'gather-phase-questions',
+    )
+    expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+      'resolve-phase-questions',
+    )
   })
 })

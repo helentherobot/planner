@@ -14,7 +14,14 @@ export async function handleNormalizePhasePrompt(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
-    [{ phase, phaseState, recon: state.recon, answeredQuestions: state.answeredQuestions }],
+    [
+      {
+        phase,
+        phaseState,
+        recon: state.recon,
+        answeredQuestions: state.answeredQuestions,
+      },
+    ],
     { onUsage: adapters.onUsage, taskType: task.type },
   )
   updatePhase(adapters.store, phase, { prompt: result.text })

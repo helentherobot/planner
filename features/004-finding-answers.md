@@ -123,7 +123,9 @@ export async function handleResolvePhaseQuestions(
 1. Filter `state.pendingQuestions` for questions relevant to `task.phase`:
    ```ts
    const phaseQuestions = state.pendingQuestions.filter((q) =>
-     Array.isArray(q.phaseIndex) ? q.phaseIndex.includes(task.phase) : q.phaseIndex === task.phase,
+     Array.isArray(q.phaseIndex)
+       ? q.phaseIndex.includes(task.phase)
+       : q.phaseIndex === task.phase,
    )
    ```
 2. If `phaseQuestions.length === 0`, return `state` immediately — no LLM call.
@@ -191,8 +193,13 @@ export async function handleResolvePhaseQuestions(
     if (parsed.result === 'answered') {
       current = {
         ...current,
-        pendingQuestions: current.pendingQuestions.filter((q) => q.id !== question.id),
-        answeredQuestions: [...current.answeredQuestions, { ...question, answer: parsed.answer }],
+        pendingQuestions: current.pendingQuestions.filter(
+          (q) => q.id !== question.id,
+        ),
+        answeredQuestions: [
+          ...current.answeredQuestions,
+          { ...question, answer: parsed.answer },
+        ],
       }
     } else if (parsed.result === 'enriched') {
       current = {
@@ -299,7 +306,9 @@ Add to `handlers` map (near `'gather-phase-questions'` entry):
 const tasks: Task[] = [
   ...(!reviseAlreadyQueued ? [{ type: 'revise-phase', phase } as Task] : []),
   ...(!checkAlreadyQueued ? [{ type: 'check-phase', phase } as Task] : []),
-  ...(!collectAlreadyQueued ? [{ type: 'collect-feedback', phase } as Task] : []),
+  ...(!collectAlreadyQueued
+    ? [{ type: 'collect-feedback', phase } as Task]
+    : []),
 ]
 ```
 
@@ -327,8 +336,12 @@ it('queues revise-phase then check-phase when issues are raised', async () => {
   // ...
   expect(result.remainingTasks[0]?.type).toBe('revise-phase')
   expect(result.remainingTasks[1]?.type).toBe('check-phase')
-  expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
-  expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
+  expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+    'gather-phase-questions',
+  )
+  expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+    'resolve-phase-questions',
+  )
 })
 ```
 
@@ -357,7 +370,9 @@ Add two new test cases:
    it('does not re-queue gather-phase-questions or resolve-phase-questions when issues are raised', async () => {
      const phase = makePhaseState({
        iterations: 1,
-       controls: { vagueness: { dismissed: [], raised: ['Something is vague'] } },
+       controls: {
+         vagueness: { dismissed: [], raised: ['Something is vague'] },
+       },
      })
      const state = makeState([phase])
      const control: QualityControl = {
@@ -369,8 +384,12 @@ Add two new test cases:
 
      const result = await handleCollectFeedback(task, state, adapters)
 
-     expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
-     expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
+     expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+       'gather-phase-questions',
+     )
+     expect(result.remainingTasks.map((t) => t.type)).not.toContain(
+       'resolve-phase-questions',
+     )
    })
    ```
 

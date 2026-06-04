@@ -1,6 +1,11 @@
 import type { Task, PlanState } from '../types.js'
 import type { Adapters } from '../types.js'
-import { resolveProfile, runRecipe, updatePhase, updateControl } from '../helpers.js'
+import {
+  resolveProfile,
+  runRecipe,
+  updatePhase,
+  updateControl,
+} from '../helpers.js'
 import { prompt } from '../prompts/revise-phase/recipe.js'
 
 export async function handleRevisePhase(
@@ -15,7 +20,9 @@ export async function handleRevisePhase(
   for (const control of adapters.controls) {
     const controlState = phaseState.controls[control.name]
     if (controlState?.raised?.length) {
-      allIssues.push(...controlState.raised.map((f) => `${f.path} — ${f.reason}`))
+      allIssues.push(
+        ...controlState.raised.map((f) => `${f.path} — ${f.reason}`),
+      )
     }
   }
 
@@ -27,7 +34,14 @@ export async function handleRevisePhase(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
-    [{ phase, phaseState, issues: allIssues, answeredQuestions: state.answeredQuestions }],
+    [
+      {
+        phase,
+        phaseState,
+        issues: allIssues,
+        answeredQuestions: state.answeredQuestions,
+      },
+    ],
     { onUsage: adapters.onUsage, taskType: task.type },
   )
 

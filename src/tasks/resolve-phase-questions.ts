@@ -1,7 +1,10 @@
 import type { Task, PlanState, Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
 import { resolveTools, resolveProfile } from '../helpers.js'
-import { systemPrompt, userMessage } from '../prompts/resolve-phase-questions/index.js'
+import {
+  systemPrompt,
+  userMessage,
+} from '../prompts/resolve-phase-questions/index.js'
 
 export async function handleResolvePhaseQuestions(
   task: Task,
@@ -9,7 +12,9 @@ export async function handleResolvePhaseQuestions(
   adapters: Adapters,
 ): Promise<PlanState> {
   const phaseQuestions = state.pendingQuestions.filter((q) =>
-    Array.isArray(q.phaseIndex) ? q.phaseIndex.includes(task.phase!) : q.phaseIndex === task.phase,
+    Array.isArray(q.phaseIndex)
+      ? q.phaseIndex.includes(task.phase!)
+      : q.phaseIndex === task.phase,
   )
 
   if (phaseQuestions.length === 0) {
@@ -57,21 +62,30 @@ export async function handleResolvePhaseQuestions(
           : String(lastMessage.content)
         : ''
 
-    const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    const stripped = raw
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
 
     let parsed: { result: string; answer?: string; context?: string }
     try {
       parsed = JSON.parse(stripped)
     } catch {
-      console.warn(`resolve-phase-questions: malformed JSON for question ${question.id}, skipping`)
+      console.warn(
+        `resolve-phase-questions: malformed JSON for question ${question.id}, skipping`,
+      )
       continue
     }
 
     if (parsed.result === 'answered' && parsed.answer !== undefined) {
       current = {
         ...current,
-        pendingQuestions: current.pendingQuestions.filter((q) => q.id !== question.id),
-        answeredQuestions: [...current.answeredQuestions, { ...question, answer: parsed.answer }],
+        pendingQuestions: current.pendingQuestions.filter(
+          (q) => q.id !== question.id,
+        ),
+        answeredQuestions: [
+          ...current.answeredQuestions,
+          { ...question, answer: parsed.answer },
+        ],
       }
     } else if (parsed.result === 'enriched' && parsed.context !== undefined) {
       current = {

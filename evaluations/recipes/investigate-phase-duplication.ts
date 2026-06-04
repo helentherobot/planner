@@ -12,9 +12,14 @@ if (!profileName) {
   process.exit(1)
 }
 
-const stateFile = join(tmpdir(), `eval-investigate-duplication-${Date.now()}.json`)
+const stateFile = join(
+  tmpdir(),
+  `eval-investigate-duplication-${Date.now()}.json`,
+)
 
-const flagsFixture = fixtures.duplication.find((f) => f.name === 'flags-duplication')!
+const flagsFixture = fixtures.duplication.find(
+  (f) => f.name === 'flags-duplication',
+)!
 
 const phase: PhaseState = {
   title: 'User profile page',
@@ -25,7 +30,8 @@ const phase: PhaseState = {
       raised: [
         {
           path: 'src/middleware/auth.ts — implement JWT verification middleware for all protected routes',
-          reason: 'cross-cutting system-wide work, belongs in a dedicated auth phase',
+          reason:
+            'cross-cutting system-wide work, belongs in a dedicated auth phase',
         },
       ],
     },
@@ -59,7 +65,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
   controls: [defaultControls.find((c) => c.name === 'duplication')!],
 }
@@ -75,7 +85,11 @@ const result = await handleInvestigatePhase(
 const duplication = result.phases[0].controls.duplication
 
 console.log(`Raised after investigation: ${duplication?.raised.length ?? 0}`)
-console.log(`Dismissed after investigation: ${duplication?.dismissed.length ?? 0}`)
+console.log(
+  `Dismissed after investigation: ${duplication?.dismissed.length ?? 0}`,
+)
 if (duplication?.dismissed.length) {
-  duplication.dismissed.forEach((d) => console.log(`  Dismissed: ${d.path} — ${d.reason}`))
+  duplication.dismissed.forEach((d) =>
+    console.log(`  Dismissed: ${d.path} — ${d.reason}`),
+  )
 }

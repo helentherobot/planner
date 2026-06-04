@@ -140,13 +140,21 @@ export interface RunOptions {
 Change:
 
 ```ts
-async function run(state: PlanState, adapters: Adapters, signal?: AbortSignal): Promise<PlanState>
+async function run(
+  state: PlanState,
+  adapters: Adapters,
+  signal?: AbortSignal,
+): Promise<PlanState>
 ```
 
 To:
 
 ```ts
-async function run(state: PlanState, adapters: Adapters, options?: RunOptions): Promise<RunResult>
+async function run(
+  state: PlanState,
+  adapters: Adapters,
+  options?: RunOptions,
+): Promise<RunResult>
 ```
 
 **Step 2.3 — Answers injection at the top of `run()`**
@@ -166,7 +174,11 @@ After each task handler returns, add a check:
 
 ```ts
 if (current.awaitingQuestions.length > 0) {
-  return { status: 'needs-answers', questions: current.awaitingQuestions, state: current }
+  return {
+    status: 'needs-answers',
+    questions: current.awaitingQuestions,
+    state: current,
+  }
 }
 ```
 
@@ -195,7 +207,11 @@ In `createInitialState()`, the `remainingTasks` seed currently is:
 Change to:
 
 ```ts
-;[{ type: 'gather-recon' }, { type: 'gather-questions' }, { type: 'synthesize-phases' }]
+;[
+  { type: 'gather-recon' },
+  { type: 'gather-questions' },
+  { type: 'synthesize-phases' },
+]
 ```
 
 **Step 2.8 — Create `src/prompts/gather-questions/recipe.ts`**
@@ -478,7 +494,9 @@ const answeredQuestionsBlock =
     ? [
         '## Resolved decisions',
         'The following questions have been answered — treat these as settled decisions:',
-        ...state.answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
+        ...state.answeredQuestions.map(
+          (q) => `Q: ${q.question}\nA: ${q.answer}`,
+        ),
         '',
       ].join('\n')
     : ''

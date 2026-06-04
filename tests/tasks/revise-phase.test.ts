@@ -50,14 +50,19 @@ function makeStore(state: PlanState): Store {
 describe('handleRevisePhase', () => {
   it('includes resolved decisions section when answeredQuestions is non-empty', async () => {
     const state = makeState({
-      answeredQuestions: [{ id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' }],
+      answeredQuestions: [
+        { id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' },
+      ],
     })
     const store = makeStore(state)
     let capturedPrompt = ''
 
     const runner = {
       run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
+        async (
+          recipe: { profile: string; prompt: (ctx: unknown) => string },
+          args: unknown[],
+        ) => {
           capturedPrompt = recipe.prompt(args[0])
           return {
             text: 'Revised plan.',
@@ -71,7 +76,11 @@ describe('handleRevisePhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [
         {
           name: 'style',
@@ -96,7 +105,10 @@ describe('handleRevisePhase', () => {
 
     const runner = {
       run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
+        async (
+          recipe: { profile: string; prompt: (ctx: unknown) => string },
+          args: unknown[],
+        ) => {
           capturedPrompt = recipe.prompt(args[0])
           return {
             text: 'Revised plan.',
@@ -110,7 +122,11 @@ describe('handleRevisePhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [
         {
           name: 'style',
@@ -139,7 +155,11 @@ describe('handleRevisePhase', () => {
       tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 

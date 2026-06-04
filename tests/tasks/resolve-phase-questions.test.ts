@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handleResolvePhaseQuestions } from '../../src/tasks/resolve-phase-questions.js'
-import type { PlanState, Task, PhaseState, PhaseQuestion } from '../../src/types.js'
+import type {
+  PlanState,
+  Task,
+  PhaseState,
+  PhaseQuestion,
+} from '../../src/types.js'
 import type { Adapters } from '../../src/types.js'
 import type { Store } from '../../src/types.js'
 
@@ -63,7 +68,11 @@ function makeAdapters(state: PlanState): Adapters {
     },
     store: makeStore(state),
     observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+    config: {
+      maxFilesPerPhase: 10,
+      minimumIterations: 1,
+      maximumIterations: 5,
+    },
     controls: [],
   }
 }
@@ -93,12 +102,19 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('moves an answered question from pendingQuestions to answeredQuestions with correct shape', async () => {
-    const question: PhaseQuestion = { id: 'q-0', question: 'Which ORM?', phaseIndex: 0 }
+    const question: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [question] })
     const adapters = makeAdapters(state)
 
     mockSend.mockResolvedValueOnce(
-      makeSendResult({ result: 'answered', answer: 'Drizzle ORM, confirmed in CLAUDE.md.' }),
+      makeSendResult({
+        result: 'answered',
+        answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
+      }),
     )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
@@ -114,12 +130,19 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('updates context on an enriched question and leaves it in pendingQuestions', async () => {
-    const question: PhaseQuestion = { id: 'q-0', question: 'Auth strategy?', phaseIndex: 0 }
+    const question: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Auth strategy?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [question] })
     const adapters = makeAdapters(state)
 
     mockSend.mockResolvedValueOnce(
-      makeSendResult({ result: 'enriched', context: 'README mentions NextAuth.' }),
+      makeSendResult({
+        result: 'enriched',
+        context: 'README mentions NextAuth.',
+      }),
     )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
@@ -130,17 +153,31 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('processes two questions: first answered, second enriched; runner called twice; context flows through', async () => {
-    const q1: PhaseQuestion = { id: 'q-0', question: 'Which ORM?', phaseIndex: 0 }
-    const q2: PhaseQuestion = { id: 'q-1', question: 'Auth strategy?', phaseIndex: 0 }
+    const q1: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
+    const q2: PhaseQuestion = {
+      id: 'q-1',
+      question: 'Auth strategy?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [q1, q2] })
     const adapters = makeAdapters(state)
 
     mockSend
       .mockResolvedValueOnce(
-        makeSendResult({ result: 'answered', answer: 'Drizzle ORM, confirmed in CLAUDE.md.' }),
+        makeSendResult({
+          result: 'answered',
+          answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
+        }),
       )
       .mockResolvedValueOnce(
-        makeSendResult({ result: 'enriched', context: 'README mentions NextAuth.' }),
+        makeSendResult({
+          result: 'enriched',
+          context: 'README mentions NextAuth.',
+        }),
       )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
@@ -154,19 +191,32 @@ describe('handleResolvePhaseQuestions', () => {
 
     const secondCallMessages = mockSend.mock.calls[1][2]
     expect(secondCallMessages[0]).toContain('Which ORM?')
-    expect(secondCallMessages[0]).toContain('Drizzle ORM, confirmed in CLAUDE.md.')
+    expect(secondCallMessages[0]).toContain(
+      'Drizzle ORM, confirmed in CLAUDE.md.',
+    )
   })
 
   it('leaves a question unchanged when result is none and loop continues', async () => {
-    const q1: PhaseQuestion = { id: 'q-0', question: 'Cache needed?', phaseIndex: 0 }
-    const q2: PhaseQuestion = { id: 'q-1', question: 'Which ORM?', phaseIndex: 0 }
+    const q1: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Cache needed?',
+      phaseIndex: 0,
+    }
+    const q2: PhaseQuestion = {
+      id: 'q-1',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [q1, q2] })
     const adapters = makeAdapters(state)
 
     mockSend
       .mockResolvedValueOnce(makeSendResult({ result: 'none' }))
       .mockResolvedValueOnce(
-        makeSendResult({ result: 'answered', answer: 'Drizzle ORM, confirmed in CLAUDE.md.' }),
+        makeSendResult({
+          result: 'answered',
+          answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
+        }),
       )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
@@ -179,12 +229,19 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('includes question with array phaseIndex and preserves array on AnsweredQuestion', async () => {
-    const question: PhaseQuestion = { id: 'q-0', question: 'Which ORM?', phaseIndex: [0, 1] }
+    const question: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: [0, 1],
+    }
     const state = makeState({ pendingQuestions: [question] })
     const adapters = makeAdapters(state)
 
     mockSend.mockResolvedValueOnce(
-      makeSendResult({ result: 'answered', answer: 'Drizzle ORM, confirmed in CLAUDE.md.' }),
+      makeSendResult({
+        result: 'answered',
+        answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
+      }),
     )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
@@ -195,8 +252,16 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('calls onUsage once per question with correct taskType and token counts', async () => {
-    const q1: PhaseQuestion = { id: 'q-0', question: 'Which ORM?', phaseIndex: 0 }
-    const q2: PhaseQuestion = { id: 'q-1', question: 'Auth strategy?', phaseIndex: 0 }
+    const q1: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
+    const q2: PhaseQuestion = {
+      id: 'q-1',
+      question: 'Auth strategy?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [q1, q2] })
     const onUsage = vi.fn()
 
@@ -222,8 +287,16 @@ describe('handleResolvePhaseQuestions', () => {
   })
 
   it('skips malformed JSON for one iteration and continues processing remaining questions', async () => {
-    const q1: PhaseQuestion = { id: 'q-0', question: 'Cache needed?', phaseIndex: 0 }
-    const q2: PhaseQuestion = { id: 'q-1', question: 'Which ORM?', phaseIndex: 0 }
+    const q1: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Cache needed?',
+      phaseIndex: 0,
+    }
+    const q2: PhaseQuestion = {
+      id: 'q-1',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
     const state = makeState({ pendingQuestions: [q1, q2] })
     const adapters = makeAdapters(state)
 
@@ -233,7 +306,10 @@ describe('handleResolvePhaseQuestions', () => {
         usage: { inputTokens: 5, outputTokens: 5, totalCostUsd: 0 },
       })
       .mockResolvedValueOnce(
-        makeSendResult({ result: 'answered', answer: 'Drizzle ORM, confirmed in CLAUDE.md.' }),
+        makeSendResult({
+          result: 'answered',
+          answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
+        }),
       )
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)

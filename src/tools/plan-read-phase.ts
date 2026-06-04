@@ -2,7 +2,10 @@ import type { DiscoverableTool } from '@helentherobot/runner'
 import type { Store } from '../types.js'
 import { makeDiscoverable } from './helpers.js'
 
-export function makePlanReadPhase(store: Store, phase: number): DiscoverableTool {
+export function makePlanReadPhase(
+  store: Store,
+  phase: number,
+): DiscoverableTool {
   return makeDiscoverable(
     '__plan_read_phase',
     'Read the current implementation plan for this phase.',

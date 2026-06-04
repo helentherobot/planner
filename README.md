@@ -89,7 +89,12 @@ const runner = new Runner({
       model: 'claude-sonnet-4-5',
       contextWindowTokens: 200000,
       requestTimeoutMs: 120000,
-      queue: { maxConcurrent: 2, requestsPerMinute: 50, affinityMode: false, warmup: false },
+      queue: {
+        maxConcurrent: 2,
+        requestsPerMinute: 50,
+        affinityMode: false,
+        warmup: false,
+      },
     },
   },
   secrets: { anthropic: process.env.ANTHROPIC_API_KEY },
@@ -180,7 +185,9 @@ When `onUsage` is not provided, behaviour is identical to before — no errors, 
 import { run, createInitialState } from '@helentherobot/planner'
 
 const result = await run(
-  createInitialState('Add OAuth2 login with GitHub and Google to the existing Express app.'),
+  createInitialState(
+    'Add OAuth2 login with GitHub and Google to the existing Express app.',
+  ),
   adapters,
 )
 
@@ -356,7 +363,9 @@ const consistencyControl: QualityControl = {
   checkRecipe: {
     profile: '',
     prompt: ({ phaseState, controlState }) => {
-      const dismissed = controlState.dismissed.map((d) => `${d.path} — ${d.reason}`).join('\n')
+      const dismissed = controlState.dismissed
+        .map((d) => `${d.path} — ${d.reason}`)
+        .join('\n')
       const cleared =
         controlState.dismissed.length > 0
           ? `Previously cleared — do not re-flag:\n${dismissed}`

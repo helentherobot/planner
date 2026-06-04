@@ -3,8 +3,18 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { run, defaultControls, createInitialState } from '../../src/index.ts'
-import type { Store, Observer, PlanState, ProgressEvent, Adapters } from '../../src/index.ts'
-import { runner, profileNames as availableProfiles, prompts } from '../config.ts'
+import type {
+  Store,
+  Observer,
+  PlanState,
+  ProgressEvent,
+  Adapters,
+} from '../../src/index.ts'
+import {
+  runner,
+  profileNames as availableProfiles,
+  prompts,
+} from '../config.ts'
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -12,8 +22,10 @@ function parseArgs() {
   let selectedProfiles: string[] = []
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--size' && args[i + 1]) size = args[++i] as keyof typeof prompts
-    if (args[i] === '--profiles' && args[i + 1]) selectedProfiles = args[++i].split(',')
+    if (args[i] === '--size' && args[i + 1])
+      size = args[++i] as keyof typeof prompts
+    if (args[i] === '--profiles' && args[i + 1])
+      selectedProfiles = args[++i].split(',')
   }
 
   return { size, profileNames: selectedProfiles }
@@ -22,7 +34,9 @@ function parseArgs() {
 const { size, profileNames } = parseArgs()
 
 if (profileNames.length < 2) {
-  console.error('Usage: tsx evaluations/e2e/compare-profiles.ts --size small --profiles p1,p2')
+  console.error(
+    'Usage: tsx evaluations/e2e/compare-profiles.ts --size small --profiles p1,p2',
+  )
   process.exit(1)
 }
 
@@ -34,7 +48,9 @@ for (const name of profileNames) {
 }
 
 if (!prompts[size]) {
-  console.error(`Unknown size "${size}". Valid: tiny, small, medium, large, huge`)
+  console.error(
+    `Unknown size "${size}". Valid: tiny, small, medium, large, huge`,
+  )
   process.exit(1)
 }
 
@@ -102,14 +118,19 @@ async function runProfile(
   const result = await run(createInitialState(brief), adapters)
 
   if (result.status === 'needs-answers') {
-    console.error(`[${profileName}] Paused — needs answers. Cannot compare profiles in this state.`)
+    console.error(
+      `[${profileName}] Paused — needs answers. Cannot compare profiles in this state.`,
+    )
     process.exit(1)
   }
 
   return { phases: result.state.phases, elapsedMs: Date.now() - startedAt }
 }
 
-const results: Record<string, { phases: PlanState['phases']; elapsedMs: number }> = {}
+const results: Record<
+  string,
+  { phases: PlanState['phases']; elapsedMs: number }
+> = {}
 
 for (const name of profileNames) {
   console.log(`Running profile: ${name}`)
@@ -136,5 +157,7 @@ for (let i = 0; i < maxPhases; i++) {
 console.log('Phase counts:')
 for (const name of profileNames) {
   const elapsed = Math.round(results[name].elapsedMs / 1000)
-  console.log(`  [${name}] ${results[name].phases.length} phases in ${elapsed}s`)
+  console.log(
+    `  [${name}] ${results[name].phases.length} phases in ${elapsed}s`,
+  )
 }

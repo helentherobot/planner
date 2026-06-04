@@ -79,7 +79,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -103,7 +107,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -115,7 +123,10 @@ describe('handlePlanPhase', () => {
 
   it('excludes another phase when its index is empty', async () => {
     const phase0 = makePhaseState({ title: 'Phase One', index: '' })
-    const phase1 = makePhaseState({ title: 'Phase Two', brief: 'Do other things.' })
+    const phase1 = makePhaseState({
+      title: 'Phase Two',
+      brief: 'Do other things.',
+    })
     const state = makeState([phase0, phase1])
     const store = makeStore(state)
 
@@ -128,7 +139,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -140,8 +155,14 @@ describe('handlePlanPhase', () => {
   })
 
   it('prepends cross-phase block when another phase has a non-empty index', async () => {
-    const phase0 = makePhaseState({ title: 'Setup', index: 'src/setup.ts\nsrc/config.ts' })
-    const phase1 = makePhaseState({ title: 'Feature', brief: 'Build the feature.' })
+    const phase0 = makePhaseState({
+      title: 'Setup',
+      index: 'src/setup.ts\nsrc/config.ts',
+    })
+    const phase1 = makePhaseState({
+      title: 'Feature',
+      brief: 'Build the feature.',
+    })
     const state = makeState([phase0, phase1])
     const store = makeStore(state)
 
@@ -154,7 +175,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -183,7 +208,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
       onUsage,
     }
@@ -214,7 +243,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -229,7 +262,9 @@ describe('handlePlanPhase', () => {
     const phase = makePhaseState({ brief: 'Do some things.' })
     const state = {
       ...makeState([phase]),
-      answeredQuestions: [{ id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' }],
+      answeredQuestions: [
+        { id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' },
+      ],
     }
     const store = makeStore(state)
 
@@ -242,7 +277,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 
@@ -269,7 +308,11 @@ describe('handlePlanPhase', () => {
       },
       store,
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      config: {
+        maxFilesPerPhase: 10,
+        minimumIterations: 1,
+        maximumIterations: 5,
+      },
       controls: [],
     }
 

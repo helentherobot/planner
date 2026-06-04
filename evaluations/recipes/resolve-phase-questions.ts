@@ -11,7 +11,10 @@ if (!profileName) {
   process.exit(1)
 }
 
-const stateFile = join(tmpdir(), `eval-resolve-phase-questions-${Date.now()}.json`)
+const stateFile = join(
+  tmpdir(),
+  `eval-resolve-phase-questions-${Date.now()}.json`,
+)
 
 const phase: PhaseState = {
   title: 'Notification delivery and email digest',
@@ -42,12 +45,14 @@ const state: PlanState = {
       id: 'q1',
       phaseIndex: 0,
       question: 'What test framework does this project use?',
-      context: 'Needed to determine how to write tests for the notification task.',
+      context:
+        'Needed to determine how to write tests for the notification task.',
     },
     {
       id: 'q2',
       phaseIndex: 0,
-      question: 'What is the name of the npm package published by this project?',
+      question:
+        'What is the name of the npm package published by this project?',
       context: 'Needed to understand how the package is distributed.',
     },
     {
@@ -70,7 +75,11 @@ const adapters: Adapters = {
       writeFileSync(stateFile, JSON.stringify(s))
     },
   },
-  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  observer: {
+    start: async () => null,
+    update: async () => {},
+    complete: async () => {},
+  },
   config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
   controls: [],
 }
