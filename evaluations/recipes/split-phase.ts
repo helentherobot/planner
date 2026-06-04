@@ -1,15 +1,19 @@
-import { splitPhase } from '@/recipes/split-phase.ts'
-import type { PhaseState } from '@/index.ts'
+import { writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { handleSplitPhase } from '../../src/tasks/split-phase.ts'
+import type { PlanState, PhaseState, Adapters } from '../../src/index.ts'
 import { runner, defaultProfile } from '../config.ts'
 
 const profileName = defaultProfile
-
 if (!profileName) {
   console.error('No profiles configured in evaluations/config.ts')
   process.exit(1)
 }
 
-const phaseState: PhaseState = {
+const stateFile = join(tmpdir(), `eval-split-phase-${Date.now()}.json`)
+
+const phase: PhaseState = {
   title: 'Full authentication system',
   brief: `Implement the complete authentication system.
 
@@ -30,21 +34,66 @@ Files:
 - \`tests/services/password.test.ts\`
 - \`tests/services/token.test.ts\`
 - \`tests/middleware/auth.test.ts\``,
+  index: [
+    'src/models/user.ts',
+    'src/models/session.ts',
+    'src/models/refreshToken.ts',
+    'migrations/001_create_users.sql',
+    'migrations/002_create_sessions.sql',
+    'migrations/003_create_refresh_tokens.sql',
+    'src/services/auth.ts',
+    'src/services/password.ts',
+    'src/services/token.ts',
+    'src/middleware/auth.ts',
+    'src/routes/auth.ts',
+    'src/routes/me.ts',
+    'tests/services/auth.test.ts',
+    'tests/services/password.test.ts',
+    'tests/services/token.test.ts',
+    'tests/middleware/auth.test.ts',
+  ].join('\n'),
   controls: {},
   iterations: 0,
 }
 
-const maxFiles = 8
+const state: PlanState = {
+  brief: 'Build a full authentication system.',
+  recon: '',
+  startedAt: Date.now(),
+  completedAt: null,
+  currentTask: null,
+  progressHandle: null,
+  phases: [phase],
+  remainingTasks: [],
+  completedTasks: [],
+  awaitingQuestions: [],
+  answeredQuestions: [],
+  pendingQuestions: [],
+}
+
+let stored = state
+
+const adapters: Adapters = {
+  tools: { runner, profile: profileName, cwd: process.cwd(), tools: [] },
+  store: {
+    read: () => stored,
+    write: (s) => {
+      stored = s
+      writeFileSync(stateFile, JSON.stringify(s))
+    },
+  },
+  observer: { start: async () => null, update: async () => {}, complete: async () => {} },
+  config: { maxFilesPerPhase: 8, minimumIterations: 1, maximumIterations: 2 },
+  controls: [],
+}
 
 console.log(`split-phase — profile: ${profileName}`)
-console.log(`Splitting phase with ${maxFiles} max files`)
+console.log(`Max files: ${adapters.config.maxFilesPerPhase}`)
 console.log()
 
-const result = await runner.run({ ...splitPhase, profile: profileName }, [
-  { phase: 0, phaseState, maxFiles },
-])
+const result = await handleSplitPhase({ type: 'split-phase', phase: 0 }, state, adapters)
 
-console.log('Output:')
-console.log(result.text)
-console.log()
-console.log(`Tokens: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out`)
+console.log(`Phases after split: ${result.phases.length}`)
+for (let i = 0; i < result.phases.length; i++) {
+  console.log(`  Phase ${i + 1}: ${result.phases[i].title}`)
+}

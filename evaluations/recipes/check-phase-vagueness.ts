@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { handleCheckPhase } from '@/tasks/check-phase.ts'
-import { defaultControls } from '@/index.ts'
-import type { PlanState, PhaseState, Adapters } from '@/index.ts'
+import { handleCheckPhase } from '../../src/tasks/check-phase.ts'
+import { defaultControls } from '../../src/index.ts'
+import type { PlanState, PhaseState, Adapters } from '../../src/index.ts'
 import { runner, defaultProfile, fixtures } from '../config.ts'
 
 const profileName = defaultProfile
@@ -53,6 +53,9 @@ function makeState(
     ],
     remainingTasks: [],
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
   }
 }
 

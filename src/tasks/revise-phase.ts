@@ -27,7 +27,7 @@ export async function handleRevisePhase(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
-    [{ phase, phaseState, issues: allIssues }],
+    [{ phase, phaseState, issues: allIssues, answeredQuestions: state.answeredQuestions }],
     { onUsage: adapters.onUsage, taskType: task.type },
   )
 

@@ -1,15 +1,22 @@
-import type { PhaseState } from '../../types.js'
+import type { PhaseState, AnsweredQuestion } from '../../types.js'
 
 export function prompt({
   phase,
   phaseState,
   recon,
+  answeredQuestions,
 }: {
   phase: number
   phaseState: PhaseState
   recon: string
+  answeredQuestions: AnsweredQuestion[]
 }): string {
   const reconSection = recon ? `Codebase reconnaissance:\n${recon}` : ''
+  const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
+  const resolvedSection =
+    answeredQuestions.length > 0
+      ? `## Resolved decisions\nThe following questions have been answered — treat these as settled decisions:\n${resolved}`
+      : ''
 
   return `
     Rewrite the following phase preamble as a clear prompt for a PLANNING agent.
@@ -17,6 +24,8 @@ export function prompt({
     The planning agent's job is to produce a detailed implementation plan — specifying exactly which files to change, what content they should contain, and why. The planning agent does NOT make changes; it writes a plan that a separate coding agent will execute later.
 
     Phase ${phase + 1}: ${phaseState.title}
+
+    ${resolvedSection}
 
     ${reconSection}
 

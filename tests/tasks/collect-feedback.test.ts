@@ -26,6 +26,9 @@ function makeState(phases: PhaseState[], remaining: Task[] = []): PlanState {
     phases,
     remainingTasks: remaining,
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
   }
 }
 
@@ -78,7 +81,7 @@ describe('handleCollectFeedback', () => {
     expect(result.remainingTasks[0]?.type).toBe('check-phase')
   })
 
-  it('queues revise-phase then check-phase when issues are raised', async () => {
+  it('queues revise-phase then gather-phase-questions then check-phase when issues are raised', async () => {
     const phase = makePhaseState({
       iterations: 1,
       controls: {
@@ -98,6 +101,7 @@ describe('handleCollectFeedback', () => {
     const result = await handleCollectFeedback(task, state, adapters)
 
     expect(result.remainingTasks[0]?.type).toBe('revise-phase')
-    expect(result.remainingTasks[1]?.type).toBe('check-phase')
+    expect(result.remainingTasks[1]?.type).toBe('gather-phase-questions')
+    expect(result.remainingTasks[2]?.type).toBe('check-phase')
   })
 })

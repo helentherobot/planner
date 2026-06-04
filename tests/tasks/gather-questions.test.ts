@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { handleSynthesizePhases } from '../../src/tasks/synthesize-phases.js'
+import { handleGatherQuestions } from '../../src/tasks/gather-questions.js'
 import type { PlanState, Task } from '../../src/types.js'
 import type { Adapters } from '../../src/types.js'
 import type { Store } from '../../src/types.js'
 
-function makeState(): PlanState {
+function makeState(overrides: Partial<PlanState> = {}): PlanState {
   return {
     brief: 'Build something.',
     recon: 'Some recon.',
@@ -18,6 +18,7 @@ function makeState(): PlanState {
     awaitingQuestions: [],
     answeredQuestions: [],
     pendingQuestions: [],
+    ...overrides,
   }
 }
 
@@ -31,16 +32,82 @@ function makeStore(state: PlanState): Store {
   }
 }
 
-describe('handleSynthesizePhases', () => {
-  it('calls onUsage with the correct taskType after the recipe runs', async () => {
+describe('handleGatherQuestions', () => {
+  it('returns state unchanged when recipe returns no questions', async () => {
+    const state = makeState()
+    const store = makeStore(state)
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: '{ "questions": [] }',
+        usage: { inputTokens: 5, outputTokens: 10, totalCostUsd: 0.0001 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [],
+    }
+
+    const task: Task = { type: 'gather-questions' }
+    const result = await handleGatherQuestions(task, state, adapters)
+
+    expect(result.awaitingQuestions).toHaveLength(0)
+    expect(result).toBe(state)
+  })
+
+  it('sets awaitingQuestions with correct IDs when recipe returns questions', async () => {
+    const state = makeState()
+    const store = makeStore(state)
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: JSON.stringify({
+          questions: [
+            { question: 'Which database?', context: 'Affects schema phase structure.' },
+            { question: 'Monorepo or separate repos?', context: 'Affects all phases.' },
+          ],
+        }),
+        usage: { inputTokens: 20, outputTokens: 30, totalCostUsd: 0.001 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [],
+    }
+
+    const task: Task = { type: 'gather-questions' }
+    const result = await handleGatherQuestions(task, state, adapters)
+
+    expect(result.awaitingQuestions).toHaveLength(2)
+    expect(result.awaitingQuestions[0]).toMatchObject({
+      id: 'recon-0',
+      question: 'Which database?',
+      context: 'Affects schema phase structure.',
+    })
+    expect(result.awaitingQuestions[1]).toMatchObject({
+      id: 'recon-1',
+      question: 'Monorepo or separate repos?',
+    })
+    expect(result.pendingQuestions).toHaveLength(0)
+  })
+
+  it('calls onUsage with the correct taskType', async () => {
     const state = makeState()
     const store = makeStore(state)
     const onUsage = vi.fn()
 
     const runner = {
       run: vi.fn(async () => ({
-        text: '1. Phase One\n2. Phase Two',
-        usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
+        text: '{ "questions": [] }',
+        usage: { inputTokens: 5, outputTokens: 10, totalCostUsd: 0.0001 },
       })),
     } as unknown as Adapters['tools']['runner']
 
@@ -53,22 +120,22 @@ describe('handleSynthesizePhases', () => {
       onUsage,
     }
 
-    const task: Task = { type: 'synthesize-phases' }
-    await handleSynthesizePhases(task, state, adapters)
+    const task: Task = { type: 'gather-questions' }
+    await handleGatherQuestions(task, state, adapters)
 
     expect(onUsage).toHaveBeenCalledWith(
-      expect.objectContaining({ taskType: 'synthesize-phases', inputTokens: 10 }),
+      expect.objectContaining({ taskType: 'gather-questions', inputTokens: 5 }),
     )
   })
 
-  it('does not error when onUsage is not provided', async () => {
+  it('returns state unchanged when recipe returns invalid JSON', async () => {
     const state = makeState()
     const store = makeStore(state)
 
     const runner = {
       run: vi.fn(async () => ({
-        text: '1. Phase One',
-        usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
+        text: 'not json',
+        usage: { inputTokens: 5, outputTokens: 5, totalCostUsd: 0 },
       })),
     } as unknown as Adapters['tools']['runner']
 
@@ -80,72 +147,9 @@ describe('handleSynthesizePhases', () => {
       controls: [],
     }
 
-    const task: Task = { type: 'synthesize-phases' }
-    await expect(handleSynthesizePhases(task, state, adapters)).resolves.not.toThrow()
-  })
+    const task: Task = { type: 'gather-questions' }
+    const result = await handleGatherQuestions(task, state, adapters)
 
-  it('includes resolved decisions section when answeredQuestions is non-empty', async () => {
-    const state = {
-      ...makeState(),
-      answeredQuestions: [{ id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' }],
-    }
-    const store = makeStore(state)
-    let capturedPrompt = ''
-
-    const runner = {
-      run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
-          capturedPrompt = recipe.prompt(args[0])
-          return {
-            text: '1. Phase One',
-            usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
-          }
-        },
-      ),
-    } as unknown as Adapters['tools']['runner']
-
-    const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
-      store,
-      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
-      controls: [],
-    }
-
-    await handleSynthesizePhases({ type: 'synthesize-phases' }, state, adapters)
-
-    expect(capturedPrompt).toContain('Resolved decisions')
-    expect(capturedPrompt).toContain('Use REST or GraphQL?')
-    expect(capturedPrompt).toContain('REST')
-  })
-
-  it('omits resolved decisions section when answeredQuestions is empty', async () => {
-    const state = makeState()
-    const store = makeStore(state)
-    let capturedPrompt = ''
-
-    const runner = {
-      run: vi.fn(
-        async (recipe: { profile: string; prompt: (ctx: unknown) => string }, args: unknown[]) => {
-          capturedPrompt = recipe.prompt(args[0])
-          return {
-            text: '1. Phase One',
-            usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
-          }
-        },
-      ),
-    } as unknown as Adapters['tools']['runner']
-
-    const adapters: Adapters = {
-      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
-      store,
-      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
-      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
-      controls: [],
-    }
-
-    await handleSynthesizePhases({ type: 'synthesize-phases' }, state, adapters)
-
-    expect(capturedPrompt).not.toContain('Resolved decisions')
+    expect(result).toBe(state)
   })
 })

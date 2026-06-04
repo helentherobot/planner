@@ -25,6 +25,9 @@ function makeState(phases: PhaseState[], remaining: Task[] = []): PlanState {
     phases,
     remainingTasks: remaining,
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
   }
 }
 

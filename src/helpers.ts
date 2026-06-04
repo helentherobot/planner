@@ -51,6 +51,7 @@ export async function runRecipe<TArgs extends unknown[]>(
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
   'plan-phase',
+  'gather-phase-questions',
   'normalize-phase-plan',
   'index-phase',
   'split-phase',
@@ -97,8 +98,15 @@ export function createInitialState(brief: string): PlanState {
     currentTask: null,
     progressHandle: null,
     phases: [],
-    remainingTasks: [{ type: 'gather-recon' }, { type: 'synthesize-phases' }],
+    remainingTasks: [
+      { type: 'gather-recon' },
+      { type: 'gather-questions' },
+      { type: 'synthesize-phases' },
+    ],
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
   }
 }
 

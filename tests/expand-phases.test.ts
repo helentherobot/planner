@@ -31,4 +31,13 @@ describe('expandPhases', () => {
     expect(tasks).toHaveLength(1)
     expect(tasks[0].type).toBe('cleanup')
   })
+
+  it('places gather-phase-questions between plan-phase and normalize-phase-plan', () => {
+    const planPhaseIdx = phaseTaskOrder.indexOf('plan-phase')
+    const gatherIdx = phaseTaskOrder.indexOf('gather-phase-questions')
+    const normalizeIdx = phaseTaskOrder.indexOf('normalize-phase-plan')
+    expect(planPhaseIdx).toBeGreaterThanOrEqual(0)
+    expect(gatherIdx).toBeGreaterThan(planPhaseIdx)
+    expect(normalizeIdx).toBeGreaterThan(gatherIdx)
+  })
 })

@@ -27,7 +27,8 @@ export async function handleSplitPhase(
 
   let subPhases: Array<{ title: string; brief: string }>
   try {
-    subPhases = JSON.parse(result.text)
+    const text = result.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
+    subPhases = JSON.parse(text)
   } catch {
     console.warn('split-phase: failed to parse split result, skipping split')
     return state

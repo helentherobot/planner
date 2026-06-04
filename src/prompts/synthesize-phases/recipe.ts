@@ -1,6 +1,24 @@
-export function prompt({ brief, recon }: { brief: string; recon: string }): string {
+import type { AnsweredQuestion } from '../../types.js'
+
+export function prompt({
+  brief,
+  recon,
+  answeredQuestions,
+}: {
+  brief: string
+  recon: string
+  answeredQuestions: AnsweredQuestion[]
+}): string {
+  const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
+  const resolvedSection =
+    answeredQuestions.length > 0
+      ? `## Resolved decisions\nThe following questions have been answered — treat these as settled decisions when designing phases:\n${resolved}`
+      : ''
+
   return `
     You are a senior software architect. Given the following project brief and codebase reconnaissance, produce an ordered list of implementation phases.
+
+    ${resolvedSection}
 
     Brief:
     ${brief}
