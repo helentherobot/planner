@@ -25,6 +25,6 @@ export function prompt({ phaseState, controlState, otherPhases }: ControlRecipeC
     Plan:
     ${phaseState.brief}
 
-    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<item name only, no explanation>", "reason": "<why it belongs in a different phase>" }] }. Do not include cleared items. Output only the JSON.
+    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<item name only, no explanation>", "reason": "<plain prose sentence explaining why it belongs in a different phase — no markdown>" }] }. Do not include cleared items. Output only the JSON.
   `
 }

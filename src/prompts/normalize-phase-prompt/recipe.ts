@@ -14,9 +14,7 @@ export function prompt({
   const reconSection = recon ? `Codebase reconnaissance:\n${recon}` : ''
   const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
   const resolvedSection =
-    answeredQuestions.length > 0
-      ? `## Resolved decisions\nThe following questions have been answered — treat these as settled decisions:\n${resolved}`
-      : ''
+    answeredQuestions.length > 0 ? `Resolved decisions — treat these as settled:\n${resolved}` : ''
 
   return `
     Rewrite the following phase preamble as a clear prompt for a PLANNING agent.
@@ -37,6 +35,6 @@ export function prompt({
     - The plan should specify files, content, and rationale in enough detail that a developer could execute it without guessing
     - Include relevant context from the codebase reconnaissance if present
     - Do not include meta-instructions about how to respond
-    - Output only the rewritten prompt, nothing else
+    - Output only the rewritten prompt, nothing else. Respond in plain text only — no headings, no bold, no italic, no code fences.
   `
 }

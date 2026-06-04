@@ -13,6 +13,6 @@ export function prompt({ phaseState, controlState }: ControlRecipeContext): stri
     Plan:
     ${phaseState.brief}
 
-    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<the step text, no explanation>", "reason": "<why it is vague>" }] } for each genuinely vague step. Do not include cleared items. Output only the JSON.
+    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<the step text, no explanation>", "reason": "<plain prose sentence explaining why the step is vague — no markdown>" }] } for each genuinely vague step. Do not include cleared items. Output only the JSON.
   `
 }

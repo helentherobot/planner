@@ -7,6 +7,6 @@ export function prompt({ phaseState }: { phase: number; phaseState: PhaseState }
     Plan:
     ${phaseState.brief}
 
-    Output only the cleaned plan, nothing else.
+    Output only the cleaned plan, nothing else. Respond in plain text only — no headings, no bold, no italic, no code fences.
   `
 }

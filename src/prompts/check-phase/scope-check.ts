@@ -31,6 +31,6 @@ export function prompt({ phaseState, controlState, otherPhases }: ControlRecipeC
 
     ${authorisedFiles}
 
-    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<file path only, no explanation>", "reason": "<why it is out of scope>" }] }. Output only the JSON.
+    Return a JSON object: { "findings": [] } if clean, or { "findings": [{ "path": "<file path only, no explanation>", "reason": "<plain prose sentence explaining why it is out of scope — no markdown>" }] }. Output only the JSON.
   `
 }

@@ -10,7 +10,7 @@ export function prompt({
   answeredQuestions: AnsweredQuestion[]
 }): string {
   const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
-  const resolvedSection = answeredQuestions.length > 0 ? `## Already resolved\n${resolved}` : ''
+  const resolvedSection = answeredQuestions.length > 0 ? `Already resolved:\n${resolved}` : ''
 
   return `
     You are a senior software architect reviewing a project brief and codebase reconnaissance before planning begins.
@@ -29,6 +29,7 @@ export function prompt({
     - No questions: { "questions": [] }
     - With questions: { "questions": [{ "question": "...", "context": "..." }] }
 
-    The "context" field should explain why the model is asking — this is shown to the human and is critical for answerability.
+    The "question" field is a plain prose sentence — the question itself, no markdown.
+    The "context" field explains why the model is asking, as a plain prose sentence — this is shown to the human and is critical for answerability. No markdown.
   `
 }

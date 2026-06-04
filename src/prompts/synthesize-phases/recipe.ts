@@ -12,7 +12,7 @@ export function prompt({
   const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
   const resolvedSection =
     answeredQuestions.length > 0
-      ? `## Resolved decisions\nThe following questions have been answered — treat these as settled decisions when designing phases:\n${resolved}`
+      ? `Resolved decisions — treat these as settled when designing phases:\n${resolved}`
       : ''
 
   return `
@@ -28,7 +28,7 @@ export function prompt({
 
     Use the minimum number of phases needed — if the brief describes a single file change, that is one phase. Do not manufacture phases. A small change should have 1-2 phases; a large feature might have 5-8. Never split a single coherent change into multiple phases just to be thorough.
 
-    Return a numbered list of phase titles only — one per line, no descriptions. Each phase title should be concise and specific (e.g. "Database schema and migrations", "Authentication middleware").
+    Return a numbered list of phase titles only — one per line, no descriptions. Each phase title should be concise and specific (e.g. "Database schema and migrations", "Authentication middleware"). Respond in plain text only — no headings, no bold, no italic, no code fences.
 
     Important: do not include phases for committing, merging, deploying, or reviewing — these are handled automatically. Only list phases that represent concrete implementation work.
   `
