@@ -74,6 +74,7 @@ This module exports `systemPrompt: string` and `userMessage(args): string`. It f
 The handler calls `send()` once **per question** — so the prompt module deals with a single question at a time, not a list.
 
 `systemPrompt` must communicate:
+
 - The agent's job: search the codebase to find the answer to one specific planning question
 - The confidence bar: only answer if the codebase makes it unambiguous. Inferred or likely answers do not qualify.
 - The enrichment path: if relevant information was found but the answer is still uncertain, return it as context but do not answer
@@ -84,6 +85,7 @@ The handler calls `send()` once **per question** — so the prompt module deals 
 The prompt body itself must not contain markdown syntax — no `##` headings, no `**bold**`, no backtick fences. Bullet lists with `-` are fine. Small models mirror the style of their instructions.
 
 `userMessage(args)` accepts a **single question** plus its surrounding context:
+
 ```ts
 {
   phaseIndex: number
@@ -97,6 +99,7 @@ The prompt body itself must not contain markdown syntax — no `##` headings, no
 ```
 
 It formats a plain-text message describing the phase, listing any previously answered questions for context, then presenting the single question to investigate. The expected output JSON has three possible shapes:
+
 ```json
 { "result": "answered", "answer": "The project uses Drizzle ORM, confirmed in CLAUDE.md line 12." }
 { "result": "enriched", "context": "Found in README.md: 'Auth is handled by NextAuth'..." }
@@ -106,6 +109,7 @@ It formats a plain-text message describing the phase, listing any previously ans
 #### Step 1.2 — Create `src/tasks/resolve-phase-questions.ts`
 
 Handler signature (same as all other handlers):
+
 ```ts
 export async function handleResolvePhaseQuestions(
   task: Task,
@@ -118,26 +122,27 @@ export async function handleResolvePhaseQuestions(
 
 1. Filter `state.pendingQuestions` for questions relevant to `task.phase`:
    ```ts
-   const phaseQuestions = state.pendingQuestions.filter(q =>
-     Array.isArray(q.phaseIndex)
-       ? q.phaseIndex.includes(task.phase)
-       : q.phaseIndex === task.phase
+   const phaseQuestions = state.pendingQuestions.filter((q) =>
+     Array.isArray(q.phaseIndex) ? q.phaseIndex.includes(task.phase) : q.phaseIndex === task.phase,
    )
    ```
 2. If `phaseQuestions.length === 0`, return `state` immediately — no LLM call.
 
 3. Get the current phase state:
+
    ```ts
    const phase = state.phases[task.phase]
    ```
 
 4. Resolve tools and profile once, before the loop:
+
    ```ts
    const tools = resolveTools(adapters, task.type)
    const profile = resolveProfile(adapters, task.type)
    ```
 
 5. Loop over each question, carrying a running `current` state snapshot (so that each iteration sees previously-answered questions in context):
+
    ```ts
    let current = state
 
@@ -151,6 +156,7 @@ export async function handleResolvePhaseQuestions(
    ```
 
 6. Inside the loop — build the user message:
+
    ```ts
    const userMsg = userMessage({
      phaseIndex: task.phase,
@@ -164,6 +170,7 @@ export async function handleResolvePhaseQuestions(
    ```
 
 7. Call `send()` for this single question:
+
    ```ts
    const result = await send(
      adapters.tools.runner,
@@ -179,21 +186,19 @@ export async function handleResolvePhaseQuestions(
 10. Parse as JSON. On failure (malformed JSON), log a warning and leave `current` unchanged for this iteration — continue the loop.
 
 11. Apply per-question mutation to `current`:
+
     ```ts
     if (parsed.result === 'answered') {
       current = {
         ...current,
-        pendingQuestions: current.pendingQuestions.filter(q => q.id !== question.id),
-        answeredQuestions: [
-          ...current.answeredQuestions,
-          { ...question, answer: parsed.answer },
-        ],
+        pendingQuestions: current.pendingQuestions.filter((q) => q.id !== question.id),
+        answeredQuestions: [...current.answeredQuestions, { ...question, answer: parsed.answer }],
       }
     } else if (parsed.result === 'enriched') {
       current = {
         ...current,
-        pendingQuestions: current.pendingQuestions.map(q =>
-          q.id === question.id ? { ...q, context: parsed.context } : q
+        pendingQuestions: current.pendingQuestions.map((q) =>
+          q.id === question.id ? { ...q, context: parsed.context } : q,
         ),
       }
     }
@@ -205,6 +210,7 @@ export async function handleResolvePhaseQuestions(
 13. Return `current`.
 
 **Imports needed:**
+
 - `import type { Task, PlanState, Adapters, AnsweredQuestion } from '../types.js'`
 - `import { resolveTools, resolveProfile } from '../helpers.js'`
 - `import { send } from '@helentherobot/runner/session'` (or whichever export path is used by other tasks — confirm by checking `gather-recon.ts`)
@@ -213,6 +219,7 @@ export async function handleResolvePhaseQuestions(
 #### Step 1.3 — Unit tests: `tests/tasks/resolve-phase-questions.test.ts`
 
 Use Vitest. Follow the exact structure of `tests/tasks/gather-phase-questions.test.ts`:
+
 - `makePhaseState()` factory
 - `makeState(overrides?)` factory with all `PlanState` fields
 - `makeStore(state)` factory — `read: vi.fn(() => stored)`, `write: vi.fn((s) => { stored = s })`
@@ -238,6 +245,7 @@ Test cases:
 #### Step 2.1 — `src/helpers.ts`: add to `phaseTaskOrder`
 
 Current array (verbatim, pre-this-branch):
+
 ```ts
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
@@ -254,6 +262,7 @@ export const phaseTaskOrder: string[] = [
 Move `'gather-phase-questions'` to after `'collect-feedback'` and append `'resolve-phase-questions'` immediately after it. Q&A runs once, after all iterations are done, before moving to the next phase.
 
 New order:
+
 ```ts
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
@@ -263,19 +272,21 @@ export const phaseTaskOrder: string[] = [
   'split-phase',
   'check-phase',
   'collect-feedback',
-  'gather-phase-questions',    // ← runs once after the loop exits
-  'resolve-phase-questions',   // ← new, immediately after
+  'gather-phase-questions', // ← runs once after the loop exits
+  'resolve-phase-questions', // ← new, immediately after
 ]
 ```
 
 #### Step 2.2 — `src/run.ts`: register handler
 
 Add import (near `gather-phase-questions` import):
+
 ```ts
 import { handleResolvePhaseQuestions } from './tasks/resolve-phase-questions.js'
 ```
 
 Add to `handlers` map (near `'gather-phase-questions'` entry):
+
 ```ts
 'resolve-phase-questions': handleResolvePhaseQuestions,
 ```
@@ -299,29 +310,32 @@ That is the only change to this file. Everything else stays as-is.
 The existing test at line 84 explicitly asserts the buggy behavior and must be updated:
 
 **Existing test (wrong):**
+
 ```ts
 it('queues revise-phase then gather-phase-questions then check-phase when issues are raised', async () => {
   // ...
   expect(result.remainingTasks[0]?.type).toBe('revise-phase')
-  expect(result.remainingTasks[1]?.type).toBe('gather-phase-questions')  // ← remove
+  expect(result.remainingTasks[1]?.type).toBe('gather-phase-questions') // ← remove
   expect(result.remainingTasks[2]?.type).toBe('check-phase')
 })
 ```
 
 **Fix:** rename the test and remove the `gather-phase-questions` assertion:
+
 ```ts
 it('queues revise-phase then check-phase when issues are raised', async () => {
   // ...
   expect(result.remainingTasks[0]?.type).toBe('revise-phase')
   expect(result.remainingTasks[1]?.type).toBe('check-phase')
-  expect(result.remainingTasks.map(t => t.type)).not.toContain('gather-phase-questions')
-  expect(result.remainingTasks.map(t => t.type)).not.toContain('resolve-phase-questions')
+  expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
+  expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
 })
 ```
 
 Add two new test cases:
 
 1. **Q&A tasks survive the clean exit** — when `collect-feedback` exits cleanly (no issues raised, iterations >= minimum), `gather-phase-questions` and `resolve-phase-questions` already in `remainingTasks` are NOT removed by `withoutStalePhaseTasks`:
+
    ```ts
    it('does not strip gather-phase-questions or resolve-phase-questions on clean exit', async () => {
      const phase = makePhaseState({ iterations: 1 })
@@ -338,6 +352,7 @@ Add two new test cases:
    ```
 
 2. **Q&A tasks are never re-queued when issues are raised** — Branch 1 re-queue must not include them even when controls are raised:
+
    ```ts
    it('does not re-queue gather-phase-questions or resolve-phase-questions when issues are raised', async () => {
      const phase = makePhaseState({
@@ -354,8 +369,8 @@ Add two new test cases:
 
      const result = await handleCollectFeedback(task, state, adapters)
 
-     expect(result.remainingTasks.map(t => t.type)).not.toContain('gather-phase-questions')
-     expect(result.remainingTasks.map(t => t.type)).not.toContain('resolve-phase-questions')
+     expect(result.remainingTasks.map((t) => t.type)).not.toContain('gather-phase-questions')
+     expect(result.remainingTasks.map((t) => t.type)).not.toContain('resolve-phase-questions')
    })
    ```
 
@@ -364,6 +379,7 @@ Add two new test cases:
 Create `evaluations/recipes/collect-feedback-qa-sequencing.ts` to verify the end-to-end ordering.
 
 The recipe should:
+
 - Build a `PlanState` with one phase, a few `pendingQuestions` for that phase, and `remainingTasks` that include `gather-phase-questions` and `resolve-phase-questions` after `collect-feedback` (mirroring `phaseTaskOrder`)
 - Invoke `handleCollectFeedback` with no raised controls and iterations >= minimum
 - Assert that `gather-phase-questions` and `resolve-phase-questions` remain in `remainingTasks` after the call
@@ -409,26 +425,26 @@ Audit results from research:
 
 **Free-text output prompts — missing explicit plaintext instruction (7 files):**
 
-| File | What it does |
-|------|-------------|
-| `src/prompts/gather-recon/system.ts` | Recon agent — requests a concise multi-paragraph summary |
-| `src/prompts/plan-phase/system.ts` | Planning agent — requests a thorough implementation plan |
-| `src/prompts/normalize-phase-plan/recipe.ts` | Cleans up prose/formatting in a plan |
-| `src/prompts/normalize-phase-prompt/recipe.ts` | Rewrites a phase preamble as an agent prompt |
-| `src/prompts/revise-phase/recipe.ts` | Revises a phase plan to address confirmed issues |
-| `src/prompts/synthesize-phases/recipe.ts` | Produces the initial ordered list of phase titles |
-| `src/prompts/index-phase/recipe.ts` | Extracts a flat list of file paths from a plan |
+| File                                           | What it does                                             |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| `src/prompts/gather-recon/system.ts`           | Recon agent — requests a concise multi-paragraph summary |
+| `src/prompts/plan-phase/system.ts`             | Planning agent — requests a thorough implementation plan |
+| `src/prompts/normalize-phase-plan/recipe.ts`   | Cleans up prose/formatting in a plan                     |
+| `src/prompts/normalize-phase-prompt/recipe.ts` | Rewrites a phase preamble as an agent prompt             |
+| `src/prompts/revise-phase/recipe.ts`           | Revises a phase plan to address confirmed issues         |
+| `src/prompts/synthesize-phases/recipe.ts`      | Produces the initial ordered list of phase titles        |
+| `src/prompts/index-phase/recipe.ts`            | Extracts a flat list of file paths from a plan           |
 
 **JSON-output prompts with free-text fields — missing plaintext instruction on those fields (6 files, 8 fields):**
 
-| File | Free-text fields |
-|------|-----------------|
-| `src/prompts/check-phase/duplication-check.ts` | `reason` |
-| `src/prompts/check-phase/scope-check.ts` | `reason` |
-| `src/prompts/check-phase/vagueness-check.ts` | `reason` |
+| File                                           | Free-text fields      |
+| ---------------------------------------------- | --------------------- |
+| `src/prompts/check-phase/duplication-check.ts` | `reason`              |
+| `src/prompts/check-phase/scope-check.ts`       | `reason`              |
+| `src/prompts/check-phase/vagueness-check.ts`   | `reason`              |
 | `src/prompts/gather-phase-questions/recipe.ts` | `question`, `context` |
-| `src/prompts/gather-questions/recipe.ts` | `question`, `context` |
-| `src/prompts/split-phase/recipe.ts` | `title`, `brief` |
+| `src/prompts/gather-questions/recipe.ts`       | `question`, `context` |
+| `src/prompts/split-phase/recipe.ts`            | `title`, `brief`      |
 
 Two rules apply to every prompt in this codebase:
 
@@ -446,6 +462,7 @@ For each of the 7 files, make two changes:
 > "Respond in plain text only. Do not use markdown — no headings, no bullet points, no bold, no italic, no code fences."
 
 Notes per file:
+
 - `gather-recon/system.ts` and `plan-phase/system.ts` — system prompts for agentic tasks; add the plaintext instruction at the end as a standalone constraint.
 - `normalize-phase-plan/recipe.ts`, `normalize-phase-prompt/recipe.ts`, `revise-phase/recipe.ts` — already say "Output only the …, nothing else"; append the plaintext constraint to that sentence.
 - `synthesize-phases/recipe.ts` — already says "one per line, no descriptions"; add plaintext constraint to the output instruction.
@@ -473,10 +490,11 @@ No tests needed for this phase — the changes are prompt text only and existing
 ### Completed
 
 - Research and planning
+- Phase 1: prompt module + task handler + tests
 
 ### In Progress
 
-- Phase 1: prompt module + task handler + tests
+(none)
 
 ### To Do
 
