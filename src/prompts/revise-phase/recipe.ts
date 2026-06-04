@@ -12,15 +12,10 @@ export function prompt({
   answeredQuestions: AnsweredQuestion[]
 }): string {
   const issueList = issues.map((issue) => `- ${issue}`).join('\n')
-
+  const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
   const resolvedSection =
     answeredQuestions.length > 0
-      ? [
-          '## Resolved decisions',
-          'The following questions have been answered — treat these as settled decisions:',
-          ...answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
-          '',
-        ].join('\n')
+      ? `## Resolved decisions\nThe following questions have been answered — treat these as settled decisions:\n${resolved}`
       : ''
 
   return `

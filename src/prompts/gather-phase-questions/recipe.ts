@@ -15,23 +15,12 @@ export function prompt({
   answeredQuestions: AnsweredQuestion[]
   existingPendingQuestions: PhaseQuestion[]
 }): string {
-  const resolvedSection =
-    answeredQuestions.length > 0
-      ? [
-          '## Already resolved',
-          ...answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
-          '',
-        ].join('\n')
-      : ''
+  const resolved = answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`).join('\n')
+  const resolvedSection = answeredQuestions.length > 0 ? `## Already resolved\n${resolved}` : ''
 
+  const existing = existingPendingQuestions.map((q) => `- ${q.question}`).join('\n')
   const existingSection =
-    existingPendingQuestions.length > 0
-      ? [
-          '## Already pending (do not re-ask)',
-          ...existingPendingQuestions.map((q) => `- ${q.question}`),
-          '',
-        ].join('\n')
-      : ''
+    existingPendingQuestions.length > 0 ? `## Already pending (do not re-ask)\n${existing}` : ''
 
   return `
     You are reviewing a phase's implementation plan to identify questions that, if answered, would improve or correct it.
@@ -45,7 +34,11 @@ export function prompt({
     Phase ${phaseIndex} implementation plan:
     ${phaseState.brief}
 
-    ${resolvedSection}${existingSection}These questions will be collected and presented to the human after planning completes — they do not pause execution. Exclude anything already resolved or already pending above.
+    ${resolvedSection}
+
+    ${existingSection}
+
+    These questions will be collected and presented to the human after planning completes — they do not pause execution. Exclude anything already resolved or already pending above.
 
     Return JSON only, no explanation:
     - No questions: { "questions": [] }
