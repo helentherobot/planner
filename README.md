@@ -18,13 +18,17 @@ npm install @helentherobot/runner
 
 ## Concepts
 
-- **`PlanState`** — the full serialisable state of a plan run: the brief, all phases, the task queue, timestamps, and the current progress handle.
+- **`PlanState`** — the full serialisable state of a plan run: the brief, all phases, the task queue, timestamps, the current progress handle, and accumulated questions.
 - **`Adapters`** — the bundle the consumer provides: AI tools, persistence, progress reporting, configuration, and quality controls.
 - **`Store`** — a persistence adapter with `read()` and `write()` methods, bound by the consumer to a specific location.
 - **`Observer`** — a progress reporting adapter that receives start, update, and complete events and returns an opaque handle used to track a single reporting resource (e.g. a Telegram message).
 - **`Tools`** — the AI execution adapter: a `Runner` instance, a default profile name, the project `cwd`, and the agent tools to expose. Per-task tool sets can be supplied via `taskTools`.
 - **`QualityControl`** — a named concern (vagueness, duplication, scope) with a `checkRecipe` that scans a phase and returns findings, and an `investigateRecipe` that confirms or dismisses each one by number.
 - **`ControlFinding`** — a structured finding: `{ path: string, reason: string }`. Both `raised` and `dismissed` lists use this type.
+- **`RunResult`** — the discriminated union returned by `run()`: either `{ status: 'complete'; state: PlanState }` or `{ status: 'needs-answers'; questions: Question[]; state: PlanState }`.
+- **`Question`** — a clarifying question the model needs answered before it can proceed: `{ id: string, question: string, context?: string }`.
+- **`Answer`** — a consumer-supplied response: `{ questionId: string, answer: string }`.
+- **`RunOptions`** — options for `run()`: `{ signal?: AbortSignal, answers?: Answer[] }`.
 
 ## Implementing `Store`
 
@@ -175,15 +179,26 @@ When `onUsage` is not provided, behaviour is identical to before — no errors, 
 ```ts
 import { run, createInitialState } from '@helentherobot/planner'
 
-const finalState = await run(
+const result = await run(
   createInitialState('Add OAuth2 login with GitHub and Google to the existing Express app.'),
   adapters,
 )
+
+if (result.status === 'needs-answers') {
+  // The model has questions it needs answered before it can continue.
+  // Persist result.state and present result.questions to the user.
+  console.log(result.questions)
+} else {
+  // result.status === 'complete'
+  console.log(result.state)
+}
 ```
+
+`run()` returns a `RunResult` — a discriminated union on `status`. If the model encounters ambiguity early in planning (before phases are synthesised), it pauses and surfaces those questions rather than producing a plan based on guesswork.
 
 `run()` calls `observer.start()` internally before the first task and `observer.complete()` when done — you don't call them yourself. The `synthesize-phases` task expands into the full task queue automatically. State is written after every task, so an interrupted run can be resumed.
 
-By the time `run()` resolves, the returned state looks something like:
+When `run()` resolves with `status: 'complete'`, the returned state looks something like:
 
 ```
 PlanState {
@@ -204,6 +219,9 @@ PlanState {
   ]
   completedTasks: [ all tasks that ran ]
   remainingTasks: []
+  awaitingQuestions: []
+  answeredQuestions: [ ...any questions that were answered during the run ]
+  pendingQuestions: []
   completedAt: 1735000000000
 }
 ```
@@ -216,11 +234,31 @@ import { run } from '@helentherobot/planner'
 const saved = store.read()
 
 if (saved) {
-  const finalState = await run(saved, adapters)
+  const result = await run(saved, adapters)
 }
 ```
 
 The orchestrator picks up from `remainingTasks[0]` and continues without any additional setup. If the plan was already complete, `run()` returns immediately.
+
+### Resuming after questions
+
+When `run()` returns `{ status: 'needs-answers' }`, the state is already persisted. Once you have answers, resume by passing them via `RunOptions`:
+
+```ts
+import { run } from '@helentherobot/planner'
+import type { Answer } from '@helentherobot/planner'
+
+const saved = store.read()
+
+const answers: Answer[] = [
+  { questionId: 'q-abc123', answer: 'Use PostgreSQL, hosted on Railway.' },
+  { questionId: 'q-def456', answer: 'OAuth only — no email/password login.' },
+]
+
+const result = await run(saved, adapters, { answers })
+```
+
+`run()` merges the answers into state, clears `awaitingQuestions`, and continues from where it left off. The answered questions accumulate in `state.answeredQuestions` and are threaded into all subsequent prompts so the model stays consistent.
 
 ## Cancellation
 
@@ -231,10 +269,53 @@ const controller = new AbortController()
 
 setTimeout(() => controller.abort(), 30_000)
 
-const finalState = await run(state, adapters, controller.signal)
+const result = await run(state, adapters, { signal: controller.signal })
 ```
 
 `run()` checks the signal before starting each task. Aborting stops the run cleanly after the current task finishes. The saved state can be resumed later.
+
+Passing an `AbortSignal` directly (without wrapping in `RunOptions`) is also accepted and remains supported for backward compatibility.
+
+## Per-phase questions and `revise()`
+
+After synthesis, each phase is individually planned. If the model surfaces a question that is specific to a single phase (or a small set of phases), it is collected as a `PhaseQuestion` in `state.pendingQuestions` rather than halting the whole run. The full plan completes, and the per-phase questions are available afterward for the consumer to address one at a time.
+
+```ts
+import { revise } from '@helentherobot/planner'
+
+// After a successful run, check for per-phase questions:
+if (finalState.pendingQuestions.length > 0) {
+  for (const question of finalState.pendingQuestions) {
+    const answer = await askUser(question.question)
+
+    // revise() re-queues the affected phases and re-runs them with the answer threaded in.
+    finalState = await revise(finalState, adapters, question, answer)
+  }
+}
+```
+
+`revise()` determines which phases need to be re-planned based on the question's `phaseIndex` plus any additional phases the model identifies as affected. It re-queues those phases through the full planning pipeline (plan → normalise → index → check → investigate) and returns the updated `PlanState` when done.
+
+`pendingQuestions` can grow during a `revise()` call — if re-planning a phase surfaces new questions, they appear in the returned state. Process the list until it is empty.
+
+### `PhaseQuestion`
+
+```ts
+interface PhaseQuestion extends Question {
+  phaseIndex: number | number[] // which phase(s) the question is about
+}
+```
+
+### `AnsweredQuestion`
+
+```ts
+interface AnsweredQuestion extends Question {
+  answer: string
+  phaseIndex?: number | number[]
+}
+```
+
+Answered questions (both pre-synthesis and per-phase) accumulate in `state.answeredQuestions` and are visible to all subsequent prompts.
 
 ## Adding a custom `QualityControl`
 
@@ -366,3 +447,12 @@ Set `HELEN_PROFILE` in the environment to override the model profile used by the
 ```
 HELEN_PROFILE=flash node --env-file .env npm run eval:e2e -- --min 2 --max 4
 ```
+
+The e2e eval accepts `--answer` to supply answers when resuming a paused run. When a run pauses with `needs-answers`, the eval prints the exact resume command to use:
+
+```
+Run paused — needs answers. Resume with:
+  node --env-file .env npm run eval:e2e -- --answer "q-abc123=Use PostgreSQL"
+```
+
+The `run-with-answers` recipe eval exercises the full pause → answer → resume → completion flow end-to-end.
