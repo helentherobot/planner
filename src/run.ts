@@ -34,14 +34,13 @@ const handlers: Record<string, TaskHandler> = {
   cleanup: handleCleanup,
 }
 
-export async function run(
-  state: PlanState,
+export async function drainTasks(
+  initial: PlanState,
   adapters: Adapters,
-  options?: RunOptions | AbortSignal,
+  options?: RunOptions,
 ): Promise<RunResult> {
-  const opts: RunOptions = options instanceof AbortSignal ? { signal: options } : (options ?? {})
-
-  let current = state
+  const opts = options ?? {}
+  let current = initial
 
   if (opts.answers?.length) {
     for (const answer of opts.answers) {
@@ -56,16 +55,6 @@ export async function run(
     current = { ...current, awaitingQuestions: [] }
     adapters.store.write(current)
   }
-
-  const totalTasks = current.completedTasks.length + current.remainingTasks.length
-  const progressHandle = await adapters.observer.start({
-    brief: current.brief,
-    completedTasks: current.completedTasks,
-    totalTasks,
-    currentTask: null,
-    isComplete: false,
-  })
-  current = { ...current, progressHandle }
 
   while (current.remainingTasks.length > 0) {
     if (opts.signal?.aborted) break
@@ -104,13 +93,41 @@ export async function run(
     })
   }
 
-  await adapters.observer.complete(current.progressHandle, {
+  return { status: 'complete', state: current }
+}
+
+export async function run(
+  state: PlanState,
+  adapters: Adapters,
+  options?: RunOptions | AbortSignal,
+): Promise<RunResult> {
+  const opts: RunOptions = options instanceof AbortSignal ? { signal: options } : (options ?? {})
+
+  let current = state
+
+  const totalTasks = current.completedTasks.length + current.remainingTasks.length
+  const progressHandle = await adapters.observer.start({
     brief: current.brief,
     completedTasks: current.completedTasks,
-    totalTasks: current.completedTasks.length,
+    totalTasks,
+    currentTask: null,
+    isComplete: false,
+  })
+  current = { ...current, progressHandle }
+
+  const result = await drainTasks(current, adapters, opts)
+
+  if (result.status === 'needs-answers') {
+    return result
+  }
+
+  await adapters.observer.complete(result.state.progressHandle, {
+    brief: result.state.brief,
+    completedTasks: result.state.completedTasks,
+    totalTasks: result.state.completedTasks.length,
     currentTask: null,
     isComplete: true,
   })
 
-  return { status: 'complete', state: current }
+  return result
 }
