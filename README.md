@@ -110,6 +110,7 @@ const adapters: Adapters = {
       // optional: per-task tool overrides
       'gather-recon': [readFileTool, listDirectoryTool],
       'plan-phase': [readFileTool],
+      'resolve-phase-questions': [readFileTool, listDirectoryTool],
     },
   },
   store,
@@ -285,7 +286,7 @@ Passing an `AbortSignal` directly (without wrapping in `RunOptions`) is also acc
 
 ## Per-phase questions and `revise()`
 
-After synthesis, each phase is individually planned. If the model surfaces a question that is specific to a single phase (or a small set of phases), it is collected as a `PhaseQuestion` in `state.pendingQuestions` rather than halting the whole run. The full plan completes, and the per-phase questions are available afterward for the consumer to address one at a time.
+After synthesis, each phase is individually planned. If the model surfaces a question that is specific to a single phase (or a small set of phases), it is collected as a `PhaseQuestion` in `state.pendingQuestions` rather than halting the whole run. Once all phases are planned, `resolve-phase-questions` runs automatically and searches the codebase (`CLAUDE.md`, `README.md`, source files) for unambiguous answers. Questions it can answer with certainty are moved to `state.answeredQuestions`; questions where relevant context was found but the answer is uncertain are left in `pendingQuestions` with an enriched `context` field. The full plan completes, and any remaining per-phase questions are available afterward for the consumer to address one at a time.
 
 ```ts
 import { revise } from '@helentherobot/planner'
