@@ -97,7 +97,11 @@ export function createInitialState(brief: string): PlanState {
     currentTask: null,
     progressHandle: null,
     phases: [],
-    remainingTasks: [{ type: 'gather-recon' }, { type: 'synthesize-phases' }],
+    remainingTasks: [
+      { type: 'gather-recon' },
+      { type: 'gather-questions' },
+      { type: 'synthesize-phases' },
+    ],
     completedTasks: [],
     awaitingQuestions: [],
     answeredQuestions: [],

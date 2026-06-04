@@ -1,4 +1,5 @@
 export type * from './types.js'
+export type { RunResult, RunOptions } from './types.js'
 export { vaguenessControl, duplicationControl, scopeControl, defaultControls } from './controls.js'
 export { run } from './run.js'
 export { createInitialState } from './helpers.js'

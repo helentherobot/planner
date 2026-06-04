@@ -70,6 +70,15 @@ export interface Answer {
   answer: string
 }
 
+export type RunResult =
+  | { status: 'complete'; state: PlanState }
+  | { status: 'needs-answers'; questions: Question[]; state: PlanState }
+
+export interface RunOptions {
+  signal?: AbortSignal
+  answers?: Answer[]
+}
+
 /**
  * The full serialisable state of a plan run.
  * `phases` is ordered — array index is the phase number; insert anywhere to support splits.

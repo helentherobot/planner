@@ -1,6 +1,7 @@
-import type { PlanState, Task } from './types.js'
+import type { PlanState, Task, RunResult, RunOptions } from './types.js'
 import type { Adapters } from './types.js'
 import { handleGatherRecon } from './tasks/gather-recon.js'
+import { handleGatherQuestions } from './tasks/gather-questions.js'
 import { handleSynthesizePhases } from './tasks/synthesize-phases.js'
 import { handleNormalizePhasePrompt } from './tasks/normalize-phase-prompt.js'
 import { handlePlanPhase } from './tasks/plan-phase.js'
@@ -17,6 +18,7 @@ type TaskHandler = (task: Task, state: PlanState, adapters: Adapters) => Promise
 
 const handlers: Record<string, TaskHandler> = {
   'gather-recon': handleGatherRecon,
+  'gather-questions': handleGatherQuestions,
   'synthesize-phases': handleSynthesizePhases,
   'normalize-phase-prompt': handleNormalizePhasePrompt,
   'plan-phase': handlePlanPhase,
@@ -33,9 +35,25 @@ const handlers: Record<string, TaskHandler> = {
 export async function run(
   state: PlanState,
   adapters: Adapters,
-  signal?: AbortSignal,
-): Promise<PlanState> {
+  options?: RunOptions | AbortSignal,
+): Promise<RunResult> {
+  const opts: RunOptions = options instanceof AbortSignal ? { signal: options } : (options ?? {})
+
   let current = state
+
+  if (opts.answers?.length) {
+    for (const answer of opts.answers) {
+      const question = current.awaitingQuestions.find((q) => q.id === answer.questionId)
+      if (question) {
+        current = {
+          ...current,
+          answeredQuestions: [...current.answeredQuestions, { ...question, answer: answer.answer }],
+        }
+      }
+    }
+    current = { ...current, awaitingQuestions: [] }
+    adapters.store.write(current)
+  }
 
   const totalTasks = current.completedTasks.length + current.remainingTasks.length
   const progressHandle = await adapters.observer.start({
@@ -48,7 +66,7 @@ export async function run(
   current = { ...current, progressHandle }
 
   while (current.remainingTasks.length > 0) {
-    if (signal?.aborted) break
+    if (opts.signal?.aborted) break
 
     const [task, ...rest] = current.remainingTasks
     current = { ...current, currentTask: task, remainingTasks: rest }
@@ -70,6 +88,10 @@ export async function run(
 
     adapters.store.write(current)
 
+    if (current.awaitingQuestions.length > 0) {
+      return { status: 'needs-answers', questions: current.awaitingQuestions, state: current }
+    }
+
     const runningTotal = current.completedTasks.length + current.remainingTasks.length
     await adapters.observer.update(current.progressHandle, {
       brief: current.brief,
@@ -88,5 +110,5 @@ export async function run(
     isComplete: true,
   })
 
-  return current
+  return { status: 'complete', state: current }
 }

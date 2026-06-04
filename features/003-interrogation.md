@@ -518,6 +518,7 @@ Decision: add to `normalize-phase-prompt` too. Redundancy is preferable to a mis
 - Feature branch and worktree created
 - Planning complete
 - Phase 1: Types & State Foundations
+- Phase 2: `run()` API + `gather-questions` task
 
 ### In Progress
 
@@ -529,7 +530,6 @@ _None_
 
 ### To Do
 
-- Phase 2: `run()` API + `gather-questions` task
 - Phase 3: `gather-phase-questions` task
 - Phase 4: `revise()` export
 - Phase 5: Context threading
