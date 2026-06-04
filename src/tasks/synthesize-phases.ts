@@ -12,7 +12,7 @@ export async function handleSynthesizePhases(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
     { profile: '', prompt },
-    [{ brief: state.brief, recon: state.recon }],
+    [{ brief: state.brief, recon: state.recon, answeredQuestions: state.answeredQuestions }],
     { onUsage: adapters.onUsage, taskType: task.type },
   )
 

@@ -224,4 +224,58 @@ describe('handlePlanPhase', () => {
     expect(messages[0]).not.toContain('src/current.ts')
     expect(messages[0]).toContain('src/other.ts')
   })
+
+  it('prepends answered questions block when answeredQuestions is non-empty', async () => {
+    const phase = makePhaseState({ brief: 'Do some things.' })
+    const state = {
+      ...makeState([phase]),
+      answeredQuestions: [{ id: 'recon-0', question: 'Use REST or GraphQL?', answer: 'REST' }],
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).toContain('Resolved decisions')
+    expect(messages[0]).toContain('Use REST or GraphQL?')
+    expect(messages[0]).toContain('REST')
+    expect(messages[0]).toContain('Do some things.')
+  })
+
+  it('omits answered questions block when answeredQuestions is empty', async () => {
+    const phase = makePhaseState({ brief: 'Do some things.' })
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).not.toContain('Resolved decisions')
+  })
 })

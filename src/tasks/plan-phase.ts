@@ -26,7 +26,18 @@ export async function handlePlanPhase(
       ? `Other phases already planned — avoid these files unless this phase specifically requires them: ${other}`
       : ''
 
-  const userMessage = crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)
+  const answeredQuestionsBlock =
+    state.answeredQuestions.length > 0
+      ? [
+          '## Resolved decisions',
+          'The following questions have been answered — treat these as settled decisions:',
+          ...state.answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
+          '',
+        ].join('\n')
+      : ''
+
+  const userMessage =
+    answeredQuestionsBlock + crossPhaseBlock + (phaseState.prompt ?? phaseState.brief)
 
   const result = await send(
     adapters.tools.runner,
