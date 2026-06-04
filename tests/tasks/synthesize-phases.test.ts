@@ -15,6 +15,9 @@ function makeState(): PlanState {
     phases: [],
     remainingTasks: [],
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
   }
 }
 

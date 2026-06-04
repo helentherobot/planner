@@ -50,6 +50,26 @@ export interface Task {
   [key: string]: unknown
 }
 
+export interface Question {
+  id: string
+  question: string
+  context?: string
+}
+
+export interface PhaseQuestion extends Question {
+  phaseIndex: number | number[]
+}
+
+export interface AnsweredQuestion extends Question {
+  answer: string
+  phaseIndex?: number | number[]
+}
+
+export interface Answer {
+  questionId: string
+  answer: string
+}
+
 /**
  * The full serialisable state of a plan run.
  * `phases` is ordered — array index is the phase number; insert anywhere to support splits.
@@ -65,6 +85,9 @@ export interface PlanState {
   phases: PhaseState[]
   remainingTasks: Task[]
   completedTasks: Task[]
+  awaitingQuestions: Question[]
+  answeredQuestions: AnsweredQuestion[]
+  pendingQuestions: PhaseQuestion[]
 }
 
 export interface OtherPhaseContext {

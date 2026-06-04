@@ -13,10 +13,12 @@ function makeState(overrides: Partial<PlanState> = {}): PlanState {
     completedAt: null,
     currentTask: null,
     progressHandle: null,
-    config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
     phases: [],
     remainingTasks: [],
     completedTasks: [],
+    awaitingQuestions: [],
+    answeredQuestions: [],
+    pendingQuestions: [],
     ...overrides,
   }
 }

@@ -68,7 +68,7 @@ Add the following interfaces in a new section after the existing `Task` interfac
 
 ```ts
 export interface Question {
-  id: string       // assigned by task handler; format: 'recon-0', 'recon-1', etc.
+  id: string // assigned by task handler; format: 'recon-0', 'recon-1', etc.
   question: string
   context?: string // why the model is asking — shown to the human, critical for answerability
 }
@@ -138,10 +138,13 @@ export interface RunOptions {
 **Step 2.2 — Update `run()` signature and return type in `src/run.ts`**
 
 Change:
+
 ```ts
 async function run(state: PlanState, adapters: Adapters, signal?: AbortSignal): Promise<PlanState>
 ```
+
 To:
+
 ```ts
 async function run(state: PlanState, adapters: Adapters, options?: RunOptions): Promise<RunResult>
 ```
@@ -149,6 +152,7 @@ async function run(state: PlanState, adapters: Adapters, options?: RunOptions): 
 **Step 2.3 — Answers injection at the top of `run()`**
 
 Before the task loop begins, if `options?.answers` is provided:
+
 - For each `answer` in `options.answers`, find the matching question in `current.awaitingQuestions` by `questionId`
 - Append it (merged with the answer) to `current.answeredQuestions`
 - Clear `current.awaitingQuestions = []`
@@ -159,16 +163,19 @@ This ensures that when `run()` is called a second time after a `needs-answers` p
 **Step 2.4 — Needs-answers early exit in the `run()` loop**
 
 After each task handler returns, add a check:
+
 ```ts
 if (current.awaitingQuestions.length > 0) {
   return { status: 'needs-answers', questions: current.awaitingQuestions, state: current }
 }
 ```
+
 Do NOT call `observer.complete()` on this path.
 
 **Step 2.5 — Wrap the normal completion return**
 
 Change the final `return current` at the bottom of `run()` to:
+
 ```ts
 return { status: 'complete', state: current }
 ```
@@ -180,17 +187,21 @@ The existing signal check inside the loop used `signal?.aborted`. Change to read
 **Step 2.7 — Insert `gather-questions` into the initial task sequence (`src/helpers.ts`)**
 
 In `createInitialState()`, the `remainingTasks` seed currently is:
+
 ```ts
-[{ type: 'gather-recon' }, { type: 'synthesize-phases' }]
+;[{ type: 'gather-recon' }, { type: 'synthesize-phases' }]
 ```
+
 Change to:
+
 ```ts
-[{ type: 'gather-recon' }, { type: 'gather-questions' }, { type: 'synthesize-phases' }]
+;[{ type: 'gather-recon' }, { type: 'gather-questions' }, { type: 'synthesize-phases' }]
 ```
 
 **Step 2.8 — Create `src/prompts/gather-questions/recipe.ts`**
 
 A `runRecipe()`-style recipe. Context shape:
+
 ```ts
 { brief: string; recon: string; answeredQuestions: AnsweredQuestion[] }
 ```
@@ -210,6 +221,7 @@ A: ...
 Handler signature: `handleGatherQuestions(task, state, adapters): Promise<PlanState>`
 
 Steps:
+
 1. Call `runRecipe(adapters, recipe, { brief: state.brief, recon: state.recon, answeredQuestions: state.answeredQuestions })` using the `gather-questions` recipe
 2. Parse `result.text` as JSON; extract the `questions` array
 3. Assign IDs: `recon-0`, `recon-1`, etc. (based on index)
@@ -221,6 +233,7 @@ Steps:
 **Step 2.10 — Register the handler in `src/run.ts`**
 
 Add to the `handlers` record:
+
 ```ts
 'gather-questions': handleGatherQuestions,
 ```
@@ -228,6 +241,7 @@ Add to the `handlers` record:
 **Step 2.11 — Export `RunResult` and `RunOptions` from `src/index.ts`**
 
 Add to the re-exports:
+
 ```ts
 export type { RunResult, RunOptions } from './types.js'
 ```
@@ -255,6 +269,7 @@ Implement the silent per-phase question accumulator with deduplication, insert i
 **Step 3.1 — Create `src/prompts/gather-phase-questions/recipe.ts`**
 
 A `runRecipe()`-style recipe. Context shape:
+
 ```ts
 {
   phaseIndex: number
@@ -275,6 +290,7 @@ Handler signature: `handleGatherPhaseQuestions(task, state, adapters): Promise<P
 The `task` object carries `task.phase: number` (same convention as all other phase tasks).
 
 Steps:
+
 1. Call `runRecipe(...)` with the `gather-phase-questions` recipe
 2. Parse result; extract `questions` array
 3. If empty, return state unchanged
@@ -290,7 +306,7 @@ Steps:
 export const phaseTaskOrder: string[] = [
   'normalize-phase-prompt',
   'plan-phase',
-  'gather-phase-questions',   // ← new, after plan-phase
+  'gather-phase-questions', // ← new, after plan-phase
   'normalize-phase-plan',
   'index-phase',
   'split-phase',
@@ -304,13 +320,17 @@ Because `handleSplitPhase` imports `phaseTaskOrder` directly and uses it to rege
 **Step 3.4 — Re-inject after revision passes in `src/tasks/collect-feedback.ts`**
 
 When `collect-feedback` re-queues tasks for a revision pass (the `anyRaised && nextIterations < maximumIterations` branch), the current inject is:
+
 ```
 revise-phase → check-phase → collect-feedback
 ```
+
 Change to:
+
 ```
 revise-phase → gather-phase-questions → check-phase → collect-feedback
 ```
+
 This ensures phase questions are refreshed after each revision. The deduplication logic in the handler prevents duplicates.
 
 **Step 3.5 — Register the handler in `src/run.ts`**
@@ -352,6 +372,7 @@ async function drainTasks(
 ```
 
 This helper contains:
+
 - The answers-injection block (from Phase 2.3)
 - The `while` loop
 - The `needs-answers` early-exit check (Phase 2.4)
@@ -363,6 +384,7 @@ This helper contains:
 **Step 4.2 — Create `src/prompts/revise-determine-phases/recipe.ts`**
 
 A `runRecipe()`-style recipe (small model — default profile should be configurable via `taskProfiles` key `'revise-spread'`). Context shape:
+
 ```ts
 {
   question: Question
@@ -387,6 +409,7 @@ export async function revise(
 ```
 
 Steps:
+
 1. **Phase-spread call**: call `runRecipe` with the `revise-determine-phases` recipe, passing the question, answer, the question's `phaseIndex` as `directPhaseIndex`, and `state.phases.map((p, i) => ({ index: i, title: p.title }))` as `phaseTitles`. Parse result to get `additionalPhases`.
 
 2. **Compute full affected set**: merge `question.phaseIndex` (flattened to `number[]`) with `additionalPhases`. Deduplicate. Sort ascending.
@@ -434,6 +457,7 @@ Thread `answeredQuestions` into the prompts for `synthesize-phases`, `plan-phase
 In `src/tasks/synthesize-phases.ts`, update the `runRecipe` call to pass `answeredQuestions: state.answeredQuestions`.
 
 In `src/prompts/synthesize-phases/recipe.ts`, update the context type and prompt string:
+
 - If `answeredQuestions` is non-empty, prepend a section:
   ```
   ## Resolved decisions
@@ -454,7 +478,7 @@ const answeredQuestionsBlock =
     ? [
         '## Resolved decisions',
         'The following questions have been answered — treat these as settled decisions:',
-        ...state.answeredQuestions.map(q => `Q: ${q.question}\nA: ${q.answer}`),
+        ...state.answeredQuestions.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
         '',
       ].join('\n')
     : ''
@@ -479,7 +503,6 @@ Decision: add to `normalize-phase-prompt` too. Redundancy is preferable to a mis
 - `tests/tasks/synthesize-phases.test.ts`: add test cases:
   - When `state.answeredQuestions` is non-empty, `runner.run` is called with a prompt containing the resolved decisions section
   - When `state.answeredQuestions` is empty, the section is absent
-  
 - `tests/tasks/plan-phase.test.ts`: add test cases:
   - When `state.answeredQuestions` is non-empty, `send` is called with a `userMessage` containing the answered questions block
   - When `state.answeredQuestions` is empty, the block is absent
@@ -494,6 +517,7 @@ Decision: add to `normalize-phase-prompt` too. Redundancy is preferable to a mis
 
 - Feature branch and worktree created
 - Planning complete
+- Phase 1: Types & State Foundations
 
 ### In Progress
 
@@ -505,7 +529,6 @@ _None_
 
 ### To Do
 
-- Phase 1: Types & State Foundations
 - Phase 2: `run()` API + `gather-questions` task
 - Phase 3: `gather-phase-questions` task
 - Phase 4: `revise()` export
