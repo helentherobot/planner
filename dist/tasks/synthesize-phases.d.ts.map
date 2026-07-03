@@ -1,0 +1,1 @@
+{"version":3,"file":"synthesize-phases.d.ts","sourceRoot":"","sources":["../../src/tasks/synthesize-phases.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,IAAI,EAAE,SAAS,EAAc,MAAM,aAAa,CAAA;AAC9D,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,aAAa,CAAA;AAI3C,wBAAsB,sBAAsB,CAC1C,IAAI,EAAE,IAAI,EACV,KAAK,EAAE,SAAS,EAChB,QAAQ,EAAE,QAAQ,GACjB,OAAO,CAAC,SAAS,CAAC,CAkCpB"}
