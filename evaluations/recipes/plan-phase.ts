@@ -1,8 +1,9 @@
-import { writeFileSync } from 'node:fs'
+import { writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { handlePlanPhase } from '../../src/tasks/plan-phase.ts'
 import type { PlanState, PhaseState, Adapters } from '../../src/index.ts'
+import { makeDiscoverable } from '../../src/tools/helpers.ts'
 import { runner, defaultProfile } from '../config.ts'
 
 const profileName = defaultProfile
@@ -37,8 +38,61 @@ const state: PlanState = {
 
 let stored = state
 
+const cwd = process.cwd()
+
+const fileTools = [
+  makeDiscoverable(
+    'read_file',
+    'Read the contents of a file in the codebase.',
+    {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Absolute or cwd-relative path' },
+      },
+      required: ['path'],
+    },
+    async ({ path }) => {
+      try {
+        return readFileSync(resolve(cwd, path as string), 'utf8')
+      } catch (e) {
+        return `Error: ${e}`
+      }
+    },
+  ),
+  makeDiscoverable(
+    'list_directory',
+    'List files and directories inside a path.',
+    {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Absolute or cwd-relative path' },
+      },
+      required: ['path'],
+    },
+    async ({ path }) => {
+      try {
+        const dir = resolve(cwd, path as string)
+        return readdirSync(dir)
+          .map((f) => {
+            const full = join(dir, f)
+            return statSync(full).isDirectory() ? `${f}/` : f
+          })
+          .join('\n')
+      } catch (e) {
+        return `Error: ${e}`
+      }
+    },
+  ),
+]
+
 const adapters: Adapters = {
-  tools: { runner, profile: profileName, cwd: process.cwd(), tools: [] },
+  tools: {
+    runner,
+    profile: profileName,
+    cwd,
+    tools: [],
+    taskTools: { 'plan-phase': fileTools },
+  },
   store: {
     read: () => stored,
     write: (s) => {

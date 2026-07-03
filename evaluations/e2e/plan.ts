@@ -177,7 +177,7 @@ const adapters: Adapters = {
   store,
   observer,
   config: {
-    maxFilesPerPhase: 20,
+    maxFilesPerPhase: 6,
     minimumIterations: min,
     maximumIterations: max,
   },

@@ -26,6 +26,7 @@ export interface UserMessageArgs {
   recon: string
   question: PhaseQuestion
   answeredQuestions: AnsweredQuestion[]
+  otherPhases: Array<{ index: number; title: string; fileIndex: string }>
 }
 
 export function userMessage(args: UserMessageArgs): string {
@@ -37,13 +38,28 @@ export function userMessage(args: UserMessageArgs): string {
     recon,
     question,
     answeredQuestions,
+    otherPhases,
   } = args
 
   const parts: string[] = []
 
   parts.push(`Plan brief: ${brief}`)
   parts.push(`Recon: ${recon}`)
-  parts.push(`Phase ${phaseIndex}: ${phaseTitle}`)
+
+  if (otherPhases.length > 0) {
+    parts.push(
+      'Other phases in this plan (title and file index only — do not ' +
+        'assume their contents; use file tools to verify):',
+    )
+    for (const p of otherPhases) {
+      const index = p.fileIndex.trim()
+        ? `\n${p.fileIndex}`
+        : ' (no file index yet)'
+      parts.push(`Phase ${p.index + 1} — ${p.title}:${index}`)
+    }
+  }
+
+  parts.push(`Phase ${phaseIndex + 1}: ${phaseTitle}`)
   parts.push(`Phase brief: ${phaseBrief}`)
 
   if (answeredQuestions.length > 0) {

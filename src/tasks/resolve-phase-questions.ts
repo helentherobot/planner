@@ -28,6 +28,10 @@ export async function handleResolvePhaseQuestions(
   let current = state
 
   for (const question of phaseQuestions) {
+    const otherPhases = current.phases
+      .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
+      .filter((p) => p.index !== task.phase!)
+
     const userMsg = userMessage({
       phaseIndex: task.phase!,
       phaseTitle: phase.title,
@@ -36,6 +40,7 @@ export async function handleResolvePhaseQuestions(
       recon: current.recon,
       question,
       answeredQuestions: current.answeredQuestions,
+      otherPhases,
     })
 
     const result = await send(

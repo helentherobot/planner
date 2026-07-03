@@ -31,10 +31,41 @@ const runnerConfig: RunnerConfig = {
         warmup: false,
       },
     },
+    'deepseek-v4-pro': {
+      provider: 'deepseek',
+      model: 'deepseek-v4-pro',
+      contextWindowTokens: 64_000,
+      requestTimeoutMs: 120_000,
+      providerOptions: {
+        openai: { thinking: { type: 'disabled' } },
+      },
+      queue: {
+        maxConcurrent: 3,
+        requestsPerMinute: 10,
+        affinityMode: false,
+        warmup: false,
+      },
+    },
+    'deepseek-v4-flash': {
+      provider: 'deepseek',
+      model: 'deepseek-v4-flash',
+      contextWindowTokens: 64_000,
+      requestTimeoutMs: 120_000,
+      providerOptions: {
+        openai: { thinking: { type: 'disabled' } },
+      },
+      queue: {
+        maxConcurrent: 5,
+        requestsPerMinute: 20,
+        affinityMode: false,
+        warmup: false,
+      },
+    },
   },
   secrets: {
     google: process.env.GOOGLE_API_KEY,
     openAi: process.env.OPENAI_API_KEY,
+    deepSeek: process.env.DEEPSEEK_API_KEY,
   },
 }
 
@@ -44,7 +75,21 @@ export const defaultProfile = process.env.HELEN_PROFILE || profileNames[0]
 
 export const prompts = {
   tiny: `Add a new field, called dayOfWeek, to the PhaseState that gets written to during the cleanup task.`,
-  small: `Add a user notification system to the app. Users should be able to receive in-app notifications and optionally subscribe to email digests. Notifications should be dismissable and have a read/unread state. The system needs to work for both individual and bulk events (e.g. a batch job completing). We haven't decided yet whether to use a queue or write directly to the database, and we're not sure if email should go through SendGrid or SES.`,
+  small: `Add a reporting system that grades the output of a generated plan. Each phase
+should receive a grade from a configurable set of grading controls, similar to how
+QualityControls work today. A grading control runs a recipe against a completed
+phase and returns a numeric score (0-100) with a rationale. After all phases are
+graded, an aggregation step computes an overall plan score and produces a structured
+report — phase-by-phase scores, rationales, and a summary — that is accessible on
+the final PlanState. Grading should run as a separate post-completion step after
+the cleanup task, not inline with the existing check/investigate cycle. Consumers
+should be able to opt in by supplying gradeControls on the Adapters object; plans
+run without gradeControls should behave identically to today. The system must handle
+partial failures gracefully — if one grading control fails, the others still run and
+the report reflects the failure. Token usage from grading calls should flow through
+the existing onUsage hook. The grading API should be fully typed and exported from
+the package so consumers can author their own grading controls without importing
+internal types.`,
 }
 
 export interface ControlFixture {
