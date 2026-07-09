@@ -40,9 +40,11 @@ export async function handleResolvePhaseQuestions(
       otherPhases,
     })
 
+    const maxSteps = adapters.config.maxStepsPerQuestion ?? 5
+
     const result = await send(
       adapters.tools.runner,
-      { profile, systemPrompt, tools, maxSteps: 20 },
+      { profile, systemPrompt, tools, maxSteps },
       [userMsg],
     )
 

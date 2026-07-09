@@ -5,6 +5,8 @@ export interface Config {
   minimumIterations: number
   maximumIterations: number
   taskProfiles?: Record<string, string | (() => string | Promise<string>)>
+  /** Maximum tool-call steps per question in resolve-phase-questions. Defaults to 5. */
+  maxStepsPerQuestion?: number
 }
 
 export interface ControlFinding {
