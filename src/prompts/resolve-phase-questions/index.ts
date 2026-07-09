@@ -21,30 +21,16 @@ export const systemPrompt = `
 export interface UserMessageArgs {
   phaseIndex: number
   phaseTitle: string
-  phaseBrief: string
-  brief: string
-  recon: string
   question: PhaseQuestion
   answeredQuestions: AnsweredQuestion[]
   otherPhases: Array<{ index: number; title: string; fileIndex: string }>
 }
 
 export function userMessage(args: UserMessageArgs): string {
-  const {
-    phaseIndex,
-    phaseTitle,
-    phaseBrief,
-    brief,
-    recon,
-    question,
-    answeredQuestions,
-    otherPhases,
-  } = args
+  const { phaseIndex, phaseTitle, question, answeredQuestions, otherPhases } =
+    args
 
   const parts: string[] = []
-
-  parts.push(`Plan brief: ${brief}`)
-  parts.push(`Recon: ${recon}`)
 
   if (otherPhases.length > 0) {
     parts.push(
@@ -60,7 +46,6 @@ export function userMessage(args: UserMessageArgs): string {
   }
 
   parts.push(`Phase ${phaseIndex + 1}: ${phaseTitle}`)
-  parts.push(`Phase brief: ${phaseBrief}`)
 
   if (answeredQuestions.length > 0) {
     parts.push('Previously answered questions:')

@@ -19,9 +19,6 @@ export async function handleResolvePhaseQuestions(task, state, adapters) {
         const userMsg = userMessage({
             phaseIndex: task.phase,
             phaseTitle: phase.title,
-            phaseBrief: phase.brief,
-            brief: current.brief,
-            recon: current.recon,
             question,
             answeredQuestions: current.answeredQuestions,
             otherPhases,

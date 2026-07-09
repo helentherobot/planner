@@ -1,9 +1,7 @@
 import type { AnsweredQuestion, PhaseQuestion, PhaseState } from '../../types.js';
-export declare function prompt({ phaseIndex, phaseState, brief, recon, answeredQuestions, existingPendingQuestions, }: {
+export declare function prompt({ phaseIndex, phaseState, answeredQuestions, existingPendingQuestions, }: {
     phaseIndex: number;
     phaseState: PhaseState;
-    brief: string;
-    recon: string;
     answeredQuestions: AnsweredQuestion[];
     existingPendingQuestions: PhaseQuestion[];
 }): string;

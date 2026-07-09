@@ -1,4 +1,4 @@
-export function prompt({ phaseIndex, phaseState, brief, recon, answeredQuestions, existingPendingQuestions, }) {
+export function prompt({ phaseIndex, phaseState, answeredQuestions, existingPendingQuestions, }) {
     const resolved = answeredQuestions
         .map((q) => `Q: ${q.question}\nA: ${q.answer}`)
         .join('\n');
@@ -12,12 +12,6 @@ export function prompt({ phaseIndex, phaseState, brief, recon, answeredQuestions
     return `
     You are reviewing a phase's implementation plan to identify
     questions that, if answered, would improve or correct it.
-
-    Brief:
-    ${brief}
-
-    Codebase:
-    ${recon}
 
     Phase ${phaseIndex} implementation plan:
     ${phaseState.brief}

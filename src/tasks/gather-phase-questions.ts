@@ -19,8 +19,6 @@ export async function handleGatherPhaseQuestions(
       {
         phaseIndex,
         phaseState,
-        brief: state.brief,
-        recon: state.recon,
         answeredQuestions: state.answeredQuestions,
         existingPendingQuestions: state.pendingQuestions,
       },

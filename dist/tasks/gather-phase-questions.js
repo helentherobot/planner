@@ -7,8 +7,6 @@ export async function handleGatherPhaseQuestions(task, state, adapters) {
         {
             phaseIndex,
             phaseState,
-            brief: state.brief,
-            recon: state.recon,
             answeredQuestions: state.answeredQuestions,
             existingPendingQuestions: state.pendingQuestions,
         },

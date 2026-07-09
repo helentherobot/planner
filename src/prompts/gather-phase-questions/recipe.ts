@@ -7,15 +7,11 @@ import type {
 export function prompt({
   phaseIndex,
   phaseState,
-  brief,
-  recon,
   answeredQuestions,
   existingPendingQuestions,
 }: {
   phaseIndex: number
   phaseState: PhaseState
-  brief: string
-  recon: string
   answeredQuestions: AnsweredQuestion[]
   existingPendingQuestions: PhaseQuestion[]
 }): string {
@@ -36,12 +32,6 @@ export function prompt({
   return `
     You are reviewing a phase's implementation plan to identify
     questions that, if answered, would improve or correct it.
-
-    Brief:
-    ${brief}
-
-    Codebase:
-    ${recon}
 
     Phase ${phaseIndex} implementation plan:
     ${phaseState.brief}

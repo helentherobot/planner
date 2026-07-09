@@ -16,10 +16,8 @@ export const systemPrompt = `
   { "result": "none" }
 `;
 export function userMessage(args) {
-    const { phaseIndex, phaseTitle, phaseBrief, brief, recon, question, answeredQuestions, otherPhases, } = args;
+    const { phaseIndex, phaseTitle, question, answeredQuestions, otherPhases } = args;
     const parts = [];
-    parts.push(`Plan brief: ${brief}`);
-    parts.push(`Recon: ${recon}`);
     if (otherPhases.length > 0) {
         parts.push('Other phases in this plan (title and file index only — do not ' +
             'assume their contents; use file tools to verify):');
@@ -31,7 +29,6 @@ export function userMessage(args) {
         }
     }
     parts.push(`Phase ${phaseIndex + 1}: ${phaseTitle}`);
-    parts.push(`Phase brief: ${phaseBrief}`);
     if (answeredQuestions.length > 0) {
         parts.push('Previously answered questions:');
         for (const aq of answeredQuestions) {

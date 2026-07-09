@@ -3,9 +3,6 @@ export declare const systemPrompt = "\n  You are a codebase research agent. Your
 export interface UserMessageArgs {
     phaseIndex: number;
     phaseTitle: string;
-    phaseBrief: string;
-    brief: string;
-    recon: string;
     question: PhaseQuestion;
     answeredQuestions: AnsweredQuestion[];
     otherPhases: Array<{
