@@ -10,13 +10,23 @@ export function resolveTools(adapters, taskType) {
     return adapters.tools.taskTools?.[taskType] ?? adapters.tools.tools;
 }
 export async function runRecipe(runner, profile, recipe, args, usageCtx) {
+    const taskStartedAt = Date.now();
     const result = await runner.run({ ...recipe, profile }, args);
+    const taskDurationMs = Date.now() - taskStartedAt;
     usageCtx?.onUsage?.({
         taskType: usageCtx.taskType,
         controlName: usageCtx.controlName,
         inputTokens: result.usage.inputTokens,
         outputTokens: result.usage.outputTokens,
         totalCostUsd: result.usage.totalCostUsd,
+        ...(result.usage.reasoningTokens != null
+            ? { reasoningTokens: result.usage.reasoningTokens }
+            : {}),
+        ...(result.usage.cachedInputTokens != null
+            ? { cachedInputTokens: result.usage.cachedInputTokens }
+            : {}),
+        taskStartedAt,
+        taskDurationMs,
     });
     return result;
 }

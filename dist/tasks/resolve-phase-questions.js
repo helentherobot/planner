@@ -23,12 +23,23 @@ export async function handleResolvePhaseQuestions(task, state, adapters) {
             answeredQuestions: current.answeredQuestions,
             otherPhases,
         });
-        const result = await send(adapters.tools.runner, { profile, systemPrompt, tools, maxSteps: 20 }, [userMsg]);
+        const maxSteps = adapters.config.maxStepsPerQuestion ?? 5;
+        const taskStartedAt = Date.now();
+        const result = await send(adapters.tools.runner, { profile, systemPrompt, tools, maxSteps }, [userMsg]);
+        const taskDurationMs = Date.now() - taskStartedAt;
         adapters.onUsage?.({
             taskType: task.type,
             inputTokens: result.usage.inputTokens,
             outputTokens: result.usage.outputTokens,
             totalCostUsd: result.usage.totalCostUsd,
+            ...(result.usage.reasoningTokens != null
+                ? { reasoningTokens: result.usage.reasoningTokens }
+                : {}),
+            ...(result.usage.cachedInputTokens != null
+                ? { cachedInputTokens: result.usage.cachedInputTokens }
+                : {}),
+            taskStartedAt,
+            taskDurationMs,
         });
         const lastMessage = result.messages.at(-1);
         const raw = lastMessage?.role === 'assistant'

@@ -25,6 +25,7 @@ export async function handlePlanPhase(task, state, adapters) {
     const userMessage = answeredQuestionsBlock +
         crossPhaseBlock +
         (phaseState.prompt ?? phaseState.brief);
+    const taskStartedAt = Date.now();
     const result = await send(adapters.tools.runner, {
         profile: await resolveProfile(adapters, task.type),
         systemPrompt,
@@ -34,11 +35,20 @@ export async function handlePlanPhase(task, state, adapters) {
         ],
         maxSteps: 20,
     }, [userMessage]);
+    const taskDurationMs = Date.now() - taskStartedAt;
     adapters.onUsage?.({
         taskType: task.type,
         inputTokens: result.usage.inputTokens,
         outputTokens: result.usage.outputTokens,
         totalCostUsd: result.usage.totalCostUsd,
+        ...(result.usage.reasoningTokens != null
+            ? { reasoningTokens: result.usage.reasoningTokens }
+            : {}),
+        ...(result.usage.cachedInputTokens != null
+            ? { cachedInputTokens: result.usage.cachedInputTokens }
+            : {}),
+        taskStartedAt,
+        taskDurationMs,
     });
     const lastMessage = result.messages.at(-1);
     const brief = lastMessage?.role === 'assistant'

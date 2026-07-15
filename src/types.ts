@@ -121,6 +121,14 @@ export interface UsageEvent {
   inputTokens: number
   outputTokens: number
   totalCostUsd?: number
+  /** Reasoning/thinking tokens, if the model supports thinking mode. */
+  reasoningTokens?: number
+  /** Input tokens served from the prompt cache (not billed at full rate). */
+  cachedInputTokens?: number
+  /** Unix timestamp (ms) when the model call started. */
+  taskStartedAt?: number
+  /** Wall-clock duration of the model call in milliseconds. */
+  taskDurationMs?: number
 }
 
 export interface QualityControl {
