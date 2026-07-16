@@ -76,13 +76,19 @@ export async function handleResolvePhaseQuestions(
           : String(lastMessage.content)
         : ''
 
-    const stripped = raw
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```\s*$/, '')
+    const stripped = raw.replace(/```(?:json)?\n?/g, '').trim()
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/)
+
+    if (!jsonMatch) {
+      console.warn(
+        `resolve-phase-questions: no JSON found for question ${question.id}, skipping`,
+      )
+      continue
+    }
 
     let parsed: { result: string; answer?: string; context?: string }
     try {
-      parsed = JSON.parse(stripped)
+      parsed = JSON.parse(jsonMatch[0])
     } catch {
       console.warn(
         `resolve-phase-questions: malformed JSON for question ${question.id}, skipping`,
