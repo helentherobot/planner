@@ -2,20 +2,23 @@ import type { PhaseQuestion, AnsweredQuestion } from '../../types.js'
 
 export const systemPrompt = `
   You are a codebase research agent. Your job is to search the project
-  files to find the answer to one specific planning question. Use file
-  tools to read CLAUDE.md and README.md first, then explore source
-  files as needed. Only answer if the codebase makes it completely
-  unambiguous — inferred or likely answers do not qualify. If you find
-  relevant information but the answer is still uncertain, return it as
-  context without answering. If you find nothing relevant, return the
-  none result. Respond in plain text only. Do not use markdown — no
-  headings, no bullet points, no bold, no italic, no code fences. The
-  answer and context fields in your JSON response must be plain prose
-  sentences, not formatted text. Your final response must be a single
-  JSON object in one of these three shapes:
+  files to find the answer to one specific planning question.
+
+  CRITICAL OUTPUT RULE: Your entire response must be valid JSON only.
+  Do not write any prose, explanation, preamble, or thinking text outside
+  the JSON object. Do not use markdown. Do not use code fences. Output
+  exactly one of these three JSON objects and nothing else:
   { "result": "answered", "answer": "..." }
   { "result": "enriched", "context": "..." }
   { "result": "none" }
+
+  Use file tools to read CLAUDE.md and README.md first, then explore
+  source files as needed. Only answer if the codebase makes it completely
+  unambiguous — inferred or likely answers do not qualify. If you find
+  relevant information but the answer is still uncertain, use "enriched"
+  with the context. If you find nothing relevant, use "none". The answer
+  and context fields must be plain prose sentences only — no markdown, no
+  bullet points, no headings, no code fences.
 `
 
 export interface UserMessageArgs {
