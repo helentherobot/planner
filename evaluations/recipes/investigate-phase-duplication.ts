@@ -70,7 +70,7 @@ const adapters: Adapters = {
     update: async () => {},
     complete: async () => {},
   },
-  config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 5 },
+  config: { maxFilesPerPhase: 10, minIterations: 1, maxIterations: 5 },
   controls: [defaultControls.find((c) => c.name === 'duplication')!],
 }
 

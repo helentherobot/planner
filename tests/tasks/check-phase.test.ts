@@ -78,8 +78,8 @@ describe('handleCheckPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [control1, control2],
     }
@@ -118,8 +118,8 @@ describe('handleCheckPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [control],
     }
@@ -157,8 +157,8 @@ describe('handleCheckPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [control],
     }
@@ -201,8 +201,8 @@ describe('handleCheckPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [control1, control2],
       onUsage,
@@ -255,8 +255,8 @@ describe('handleCheckPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [control],
     }

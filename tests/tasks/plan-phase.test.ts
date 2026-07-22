@@ -62,7 +62,7 @@ function makeSendResult(text = '') {
 describe('handlePlanPhase', () => {
   beforeEach(() => {
     mockSend.mockReset()
-    mockSend.mockResolvedValue(makeSendResult('The plan.'))
+    mockSend.mockResolvedValue(makeSendResult('a'.repeat(900)))
   })
 
   it('sends phaseState.brief when no other phases have a non-empty index', async () => {
@@ -81,8 +81,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -109,8 +109,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -141,8 +141,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -177,8 +177,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -210,8 +210,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
       onUsage,
@@ -245,8 +245,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -279,8 +279,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -310,8 +310,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -320,5 +320,172 @@ describe('handlePlanPhase', () => {
 
     const [, , messages] = mockSend.mock.calls[0]
     expect(messages[0]).not.toContain('Resolved decisions')
+  })
+
+  it('schemaArtifact set, phase > 0: injects schema into user message', async () => {
+    const SCHEMA = JSON.stringify({
+      tables: [{ name: 'users', columns: [], primaryKeyStyle: 'integer' }],
+    })
+    const phase0 = makePhaseState({ title: 'Phase 0', index: '' })
+    const phase1 = makePhaseState({ title: 'Phase 1', brief: 'Build the API.' })
+    const state = {
+      ...makeState([phase0, phase1]),
+      schemaArtifact: SCHEMA,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 1 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).toContain('Locked schema from Phase 0:')
+    expect(messages[0]).toContain(SCHEMA)
+  })
+
+  it('schemaArtifact null: no schema injected', async () => {
+    const phase = makePhaseState({ brief: 'Build the API.' })
+    const state = {
+      ...makeState([makePhaseState(), phase]),
+      schemaArtifact: null,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 1 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).not.toContain('Locked schema from Phase 0:')
+  })
+
+  it('phase 0: no schema injection even when schemaArtifact is set', async () => {
+    const SCHEMA = JSON.stringify({
+      tables: [{ name: 'users', columns: [], primaryKeyStyle: 'integer' }],
+    })
+    const phase = makePhaseState({ brief: 'Define the schema.' })
+    const state = {
+      ...makeState([phase]),
+      schemaArtifact: SCHEMA,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).not.toContain('Locked schema from Phase 0:')
+  })
+
+  it('retry path: first call returns short output, second returns valid', async () => {
+    const LONG_PLAN = 'a'.repeat(900)
+    mockSend.reset ? mockSend.mockReset() : undefined
+    mockSend
+      .mockResolvedValueOnce(makeSendResult('short'))
+      .mockResolvedValueOnce(makeSendResult(LONG_PLAN))
+
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    expect(mockSend).toHaveBeenCalledTimes(2)
+    const storedPhase = store.read()!.phases[0]
+    expect(storedPhase.brief).toBe(LONG_PLAN)
+  })
+
+  it('exhausted retries: all calls return invalid output, throws', async () => {
+    mockSend.mockReset()
+    mockSend.mockResolvedValue(makeSendResult('short'))
+
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await expect(
+      handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters),
+    ).rejects.toThrow('plan-phase-validation-failed')
+    expect(mockSend).toHaveBeenCalledTimes(3)
   })
 })

@@ -78,8 +78,8 @@ describe('handleRevisePhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [
         {
@@ -124,8 +124,8 @@ describe('handleRevisePhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [
         {
@@ -157,8 +157,8 @@ describe('handleRevisePhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -168,5 +168,93 @@ describe('handleRevisePhase', () => {
 
     expect(result).toBe(state)
     expect(runner.run).not.toHaveBeenCalled()
+  })
+
+  it('appends cross-phase contradiction to prompt when crossPhaseFinding is set', async () => {
+    const state = makeState()
+    const store = makeStore(state)
+    let capturedPrompt = ''
+
+    const runner = {
+      run: vi.fn(
+        async (
+          recipe: { profile: string; prompt: (ctx: unknown) => string },
+          args: unknown[],
+        ) => {
+          capturedPrompt = recipe.prompt(args[0])
+          return {
+            text: 'Revised plan.',
+            usage: { inputTokens: 10, outputTokens: 20, totalCostUsd: 0.001 },
+          }
+        },
+      ),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [
+        {
+          name: 'style',
+          checkRecipe: { profile: '', prompt: () => '' },
+          investigateRecipe: { profile: '', prompt: () => '' },
+        },
+      ],
+    }
+
+    const task: Task = {
+      type: 'revise-phase',
+      phase: 0,
+      crossPhaseFinding: {
+        phases: [0, 1],
+        description: 'Phase 0 uses integer IDs but phase 1 uses UUIDs.',
+      },
+    }
+    await handleRevisePhase(task, state, adapters)
+
+    expect(capturedPrompt).toContain('cross-phase contradiction')
+    expect(capturedPrompt).toContain(
+      'Phase 0 uses integer IDs but phase 1 uses UUIDs.',
+    )
+  })
+
+  it('runs revision when crossPhaseFinding is set even with no control issues', async () => {
+    const phase = makePhaseState({ controls: {} })
+    const state = makeState({ phases: [phase] })
+    const store = makeStore(state)
+
+    const runner = {
+      run: vi.fn(async () => ({
+        text: 'Revised.',
+        usage: { inputTokens: 5, outputTokens: 10, totalCostUsd: 0 },
+      })),
+    } as unknown as Adapters['tools']['runner']
+
+    const adapters: Adapters = {
+      tools: { runner, profile: 'haiku', cwd: '/tmp', tools: [] },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    const task: Task = {
+      type: 'revise-phase',
+      phase: 0,
+      crossPhaseFinding: { phases: [0], description: 'Column name conflict.' },
+    }
+    await handleRevisePhase(task, state, adapters)
+
+    expect(runner.run).toHaveBeenCalledOnce()
   })
 })

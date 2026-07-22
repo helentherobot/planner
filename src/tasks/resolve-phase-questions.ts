@@ -1,6 +1,13 @@
 import type { Task, PlanState, Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
-import { resolveTools, resolveProfile } from '../helpers.js'
+import {
+  resolveTools,
+  resolveProfile,
+  resolveOptions,
+  extractText,
+  validateOutput,
+  mergeTaskValidation,
+} from '../helpers.js'
 import {
   systemPrompt,
   userMessage,
@@ -21,9 +28,25 @@ export async function handleResolvePhaseQuestions(
     return state
   }
 
+  const opts = resolveOptions(adapters, 'resolve-phase-questions')
+  const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
+  const entry = mergedValidation[task.type]
+
   const phase = state.phases[task.phase!]
   const tools = resolveTools(adapters, task.type)
   const profile = await resolveProfile(adapters, task.type)
+  const maxSteps = adapters.config.maxStepsPerQuestion ?? 5
+  const effectiveSystemPrompt = opts.jsonMode
+    ? systemPrompt +
+      '\nRespond with only valid JSON. Do not include prose, markdown' +
+      ' fences, or explanations outside the JSON object.'
+    : systemPrompt
+  const sessionOptions = {
+    profile,
+    systemPrompt: effectiveSystemPrompt,
+    tools,
+    maxSteps,
+  }
 
   let current = state
 
@@ -40,15 +63,13 @@ export async function handleResolvePhaseQuestions(
       otherPhases,
     })
 
-    const maxSteps = adapters.config.maxStepsPerQuestion ?? 5
+    let messages: (import('@helentherobot/runner').ModelMessage | string)[] = [
+      userMsg,
+    ]
 
-    const taskStartedAt = Date.now()
-    const result = await send(
-      adapters.tools.runner,
-      { profile, systemPrompt, tools, maxSteps },
-      [userMsg],
-    )
-    const taskDurationMs = Date.now() - taskStartedAt
+    let taskStartedAt = Date.now()
+    let result = await send(adapters.tools.runner, sessionOptions, messages)
+    let taskDurationMs = Date.now() - taskStartedAt
 
     adapters.onUsage?.({
       taskType: task.type,
@@ -65,35 +86,55 @@ export async function handleResolvePhaseQuestions(
       taskDurationMs,
     })
 
-    const lastMessage = result.messages.at(-1)
-    const raw =
-      lastMessage?.role === 'assistant'
-        ? Array.isArray(lastMessage.content)
-          ? lastMessage.content
-              .filter((p) => p.type === 'text')
-              .map((p) => ('text' in p ? (p as { text: string }).text : ''))
-              .join('')
-          : String(lastMessage.content)
-        : ''
+    let text = extractText(result.messages)
+    let check = validateOutput(entry, text)
+    let retries = 0
 
-    const stripped = raw.replace(/```(?:json)?\n?/g, '').trim()
-    const jsonMatch = stripped.match(/\{[\s\S]*\}/)
+    while (!check.valid && retries < (entry?.maxRetries ?? 0)) {
+      retries++
+      messages = [
+        ...result.messages,
+        { role: 'user', content: check.retryPrompt },
+      ]
+      taskStartedAt = Date.now()
+      result = await send(adapters.tools.runner, sessionOptions, messages)
+      taskDurationMs = Date.now() - taskStartedAt
 
-    if (!jsonMatch) {
-      console.warn(
-        `resolve-phase-questions: no JSON found for question ${question.id}, skipping`,
-      )
-      continue
+      adapters.onUsage?.({
+        taskType: task.type,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        totalCostUsd: result.usage.totalCostUsd,
+        ...(result.usage.reasoningTokens != null
+          ? { reasoningTokens: result.usage.reasoningTokens }
+          : {}),
+        ...(result.usage.cachedInputTokens != null
+          ? { cachedInputTokens: result.usage.cachedInputTokens }
+          : {}),
+        taskStartedAt,
+        taskDurationMs,
+      })
+
+      text = extractText(result.messages)
+      check = validateOutput(entry, text)
+    }
+
+    if (!check.valid) {
+      throw new Error('resolve-phase-questions-validation-failed')
     }
 
     let parsed: { result: string; answer?: string; context?: string }
     try {
-      parsed = JSON.parse(jsonMatch[0])
+      parsed = JSON.parse(text.trim())
     } catch {
-      console.warn(
-        `resolve-phase-questions: malformed JSON for question ${question.id}, skipping`,
-      )
-      continue
+      const stripped = text.replace(/```(?:json)?\n?/g, '').trim()
+      const jsonMatch = stripped.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) continue
+      try {
+        parsed = JSON.parse(jsonMatch[0])
+      } catch {
+        continue
+      }
     }
 
     if (parsed.result === 'answered' && parsed.answer !== undefined) {

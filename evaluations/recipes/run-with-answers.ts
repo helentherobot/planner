@@ -75,7 +75,7 @@ const adapters: Adapters = {
       console.log(`Plan complete in ${elapsed}s`)
     },
   },
-  config: { maxFilesPerPhase: 10, minimumIterations: 1, maximumIterations: 2 },
+  config: { maxFilesPerPhase: 10, minIterations: 1, maxIterations: 2 },
   controls: defaultControls,
 }
 

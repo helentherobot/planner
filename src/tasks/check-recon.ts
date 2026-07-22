@@ -4,70 +4,49 @@ import { send } from '@helentherobot/runner'
 import {
   resolveProfile,
   resolveTools,
-  updatePhase,
   extractText,
   validateOutput,
-  mergeTaskValidation,
 } from '../helpers.js'
-import { makePlanReadPhase } from '../tools/plan-read-phase.js'
-import { systemPrompt } from '../prompts/plan-phase/system.js'
 
-export async function handlePlanPhase(
+const systemPrompt = `
+  You are verifying the accuracy of a codebase reconnaissance report.
+  Use available tools to inspect the project. For each file path
+  mentioned in the recon, verify it actually exists. Confirm that
+  library and technology claims match what is installed and configured
+  in the project. Identify any relevant areas of the codebase that are
+  absent from the recon.
+
+  Respond with only a JSON object in this exact shape:
+  { "pass": boolean, "gap": string | null }
+
+  Set "pass" to true if the recon is accurate and sufficiently
+  complete. Set "pass" to false if there are material inaccuracies or
+  significant omissions. If "pass" is false, set "gap" to a concise
+  description of what is wrong or missing. If "pass" is true, set
+  "gap" to null. Output only the JSON object — no prose, no markdown.
+`
+
+const validationEntry = {
+  type: 'schema' as const,
+  required: ['pass', 'gap'],
+  maxRetries: 2,
+}
+
+export async function handleCheckRecon(
   task: Task,
   state: PlanState,
   adapters: Adapters,
 ): Promise<PlanState> {
-  const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
-  const entry = mergedValidation[task.type]
-
-  const phase = task.phase!
-  const phaseState = state.phases[phase]
-
-  const otherPhases = state.phases
-    .map((p, i) => ({ index: i, title: p.title, fileIndex: p.index ?? '' }))
-    .filter((p) => p.index !== phase && p.fileIndex.length > 0)
-
-  const other = otherPhases
-    .map((p) => `Phase ${p.index + 1} — ${p.title}:\n${p.fileIndex}`)
-    .join('\n\n')
-
-  const crossPhaseBlock =
-    otherPhases.length > 0
-      ? `Other phases already planned — avoid these files unless this phase specifically requires them: ${other}`
-      : ''
-
-  const answeredQuestionsBlock =
-    state.answeredQuestions.length > 0
-      ? [
-          '## Resolved decisions',
-          'The following questions have been answered — treat these as settled decisions:',
-          ...state.answeredQuestions.map(
-            (q) => `Q: ${q.question}\nA: ${q.answer}`,
-          ),
-          '',
-        ].join('\n')
-      : ''
-
-  const schemaBlock =
-    state.schemaArtifact && (task.phase ?? 0) > 0
-      ? `\n\nLocked schema from Phase 0:\n${state.schemaArtifact}`
-      : ''
-
-  const userMessage =
-    answeredQuestionsBlock +
-    crossPhaseBlock +
-    (phaseState.prompt ?? phaseState.brief) +
-    schemaBlock
+  const entry = validationEntry
 
   const sessionOptions = {
-    profile: await resolveProfile(adapters, task.type),
+    profile: await resolveProfile(adapters, 'check-recon'),
     systemPrompt,
-    tools: [
-      makePlanReadPhase(adapters.store, phase),
-      ...resolveTools(adapters, task.type),
-    ],
+    tools: resolveTools(adapters, 'check-recon'),
     maxSteps: 20,
   }
+
+  const userMessage = `Here is the existing recon:\n\n${state.recon}`
 
   let messages: (import('@helentherobot/runner').ModelMessage | string)[] = [
     userMessage,
@@ -78,7 +57,7 @@ export async function handlePlanPhase(
   let taskDurationMs = Date.now() - taskStartedAt
 
   adapters.onUsage?.({
-    taskType: task.type,
+    taskType: 'check-recon',
     inputTokens: result.usage.inputTokens,
     outputTokens: result.usage.outputTokens,
     totalCostUsd: result.usage.totalCostUsd,
@@ -96,7 +75,7 @@ export async function handlePlanPhase(
   let check = validateOutput(entry, text)
   let retries = 0
 
-  while (!check.valid && retries < (entry?.maxRetries ?? 0)) {
+  while (!check.valid && retries < entry.maxRetries) {
     retries++
     messages = [
       ...result.messages,
@@ -107,7 +86,7 @@ export async function handlePlanPhase(
     taskDurationMs = Date.now() - taskStartedAt
 
     adapters.onUsage?.({
-      taskType: task.type,
+      taskType: 'check-recon',
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
       totalCostUsd: result.usage.totalCostUsd,
@@ -125,11 +104,25 @@ export async function handlePlanPhase(
     check = validateOutput(entry, text)
   }
 
-  if (!check.valid) throw new Error('plan-phase-validation-failed')
+  if (!check.valid) throw new Error('check-recon-validation-failed')
 
-  if (text) {
-    updatePhase(adapters.store, phase, { brief: text })
+  const parsed = JSON.parse(text) as { pass: boolean; gap: string | null }
+  const { pass, gap } = parsed
+
+  if (pass) {
+    return { ...state, reconAmendment: null, reconRetries: 0 }
   }
 
-  return { ...state, phases: adapters.store.read()!.phases }
+  const reconRetries = (state.reconRetries ?? 0) + 1
+
+  if (reconRetries <= entry.maxRetries) {
+    return {
+      ...state,
+      reconRetries,
+      reconAmendment: gap,
+      remainingTasks: [{ type: 'gather-recon' }, ...state.remainingTasks],
+    }
+  }
+
+  throw new Error('recon-incomplete')
 }

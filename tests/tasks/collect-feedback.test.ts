@@ -58,8 +58,8 @@ function makeAdapters(
     controls,
     config: {
       maxFilesPerPhase: 10,
-      minimumIterations: 1,
-      maximumIterations: 5,
+      minIterations: 1,
+      maxIterations: 5,
     },
   }
 }
@@ -67,7 +67,7 @@ function makeAdapters(
 const task: Task = { type: 'collect-feedback', phase: 0 }
 
 describe('handleCollectFeedback', () => {
-  it('clears phase pipeline tasks when all clean and iterations >= minimumIterations', async () => {
+  it('clears phase pipeline tasks when all clean and iterations >= minIterations', async () => {
     const phase = makePhaseState({ iterations: 1 })
     const state = makeState([phase])
     const adapters = makeAdapters(state)
@@ -77,11 +77,11 @@ describe('handleCollectFeedback', () => {
     expect(result.remainingTasks).toHaveLength(0)
   })
 
-  it('queues check-phase again when all clean but below minimumIterations', async () => {
+  it('queues check-phase again when all clean but below minIterations', async () => {
     const phase = makePhaseState({ iterations: 0 })
     const state = makeState([phase])
     const adapters = makeAdapters(state)
-    adapters.config.minimumIterations = 2
+    adapters.config.minIterations = 2
 
     const result = await handleCollectFeedback(task, state, adapters)
 

@@ -108,8 +108,8 @@ async function runProfile(
     observer,
     config: {
       maxFilesPerPhase: 12,
-      minimumIterations: 1,
-      maximumIterations: 5,
+      minIterations: 1,
+      maxIterations: 5,
     },
     controls: defaultControls,
   }
