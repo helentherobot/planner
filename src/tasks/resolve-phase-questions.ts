@@ -3,6 +3,7 @@ import { send } from '@helentherobot/runner'
 import {
   resolveTools,
   resolveProfile,
+  resolveOptions,
   extractText,
   validateOutput,
   mergeTaskValidation,
@@ -27,6 +28,7 @@ export async function handleResolvePhaseQuestions(
     return state
   }
 
+  const opts = resolveOptions(adapters, 'resolve-phase-questions')
   const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
   const entry = mergedValidation[task.type]
 
@@ -34,7 +36,17 @@ export async function handleResolvePhaseQuestions(
   const tools = resolveTools(adapters, task.type)
   const profile = await resolveProfile(adapters, task.type)
   const maxSteps = adapters.config.maxStepsPerQuestion ?? 5
-  const sessionOptions = { profile, systemPrompt, tools, maxSteps }
+  const effectiveSystemPrompt = opts.jsonMode
+    ? systemPrompt +
+      '\nRespond with only valid JSON. Do not include prose, markdown' +
+      ' fences, or explanations outside the JSON object.'
+    : systemPrompt
+  const sessionOptions = {
+    profile,
+    systemPrompt: effectiveSystemPrompt,
+    tools,
+    maxSteps,
+  }
 
   let current = state
 

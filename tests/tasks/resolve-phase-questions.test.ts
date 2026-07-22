@@ -328,4 +328,52 @@ describe('handleResolvePhaseQuestions', () => {
     ).rejects.toThrow('resolve-phase-questions-validation-failed')
     expect(mockSend).toHaveBeenCalledTimes(3)
   })
+
+  it('appends JSON mode instruction to system prompt when jsonMode is true', async () => {
+    const question: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
+    const state = makeState({ pendingQuestions: [question] })
+    const adapters: Adapters = {
+      ...makeAdapters(state),
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+        taskOptions: {
+          'resolve-phase-questions': { jsonMode: true },
+        },
+      },
+    }
+
+    mockSend.mockResolvedValueOnce(makeSendResult({ result: 'none' }))
+
+    await handleResolvePhaseQuestions(task, state, adapters)
+
+    const sessionOptions = mockSend.mock.calls[0][1] as { systemPrompt: string }
+    expect(sessionOptions.systemPrompt).toContain(
+      'Respond with only valid JSON.',
+    )
+  })
+
+  it('does not modify system prompt when jsonMode is absent', async () => {
+    const question: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Which ORM?',
+      phaseIndex: 0,
+    }
+    const state = makeState({ pendingQuestions: [question] })
+    const adapters = makeAdapters(state)
+
+    mockSend.mockResolvedValueOnce(makeSendResult({ result: 'none' }))
+
+    await handleResolvePhaseQuestions(task, state, adapters)
+
+    const sessionOptions = mockSend.mock.calls[0][1] as { systemPrompt: string }
+    expect(sessionOptions.systemPrompt).not.toContain(
+      'Respond with only valid JSON.',
+    )
+  })
 })
