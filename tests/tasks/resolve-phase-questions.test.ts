@@ -286,18 +286,13 @@ describe('handleResolvePhaseQuestions', () => {
     )
   })
 
-  it('skips malformed JSON for one iteration and continues processing remaining questions', async () => {
+  it('retries on malformed JSON and succeeds on second attempt', async () => {
     const q1: PhaseQuestion = {
       id: 'q-0',
       question: 'Cache needed?',
       phaseIndex: 0,
     }
-    const q2: PhaseQuestion = {
-      id: 'q-1',
-      question: 'Which ORM?',
-      phaseIndex: 0,
-    }
-    const state = makeState({ pendingQuestions: [q1, q2] })
+    const state = makeState({ pendingQuestions: [q1] })
     const adapters = makeAdapters(state)
 
     mockSend
@@ -305,19 +300,32 @@ describe('handleResolvePhaseQuestions', () => {
         messages: [{ role: 'assistant' as const, content: 'not valid json' }],
         usage: { inputTokens: 5, outputTokens: 5, totalCostUsd: 0 },
       })
-      .mockResolvedValueOnce(
-        makeSendResult({
-          result: 'answered',
-          answer: 'Drizzle ORM, confirmed in CLAUDE.md.',
-        }),
-      )
+      .mockResolvedValueOnce(makeSendResult({ result: 'none' }))
 
     const result = await handleResolvePhaseQuestions(task, state, adapters)
 
     expect(mockSend).toHaveBeenCalledTimes(2)
     expect(result.pendingQuestions).toHaveLength(1)
     expect(result.pendingQuestions[0].id).toBe('q-0')
-    expect(result.answeredQuestions).toHaveLength(1)
-    expect(result.answeredQuestions[0].id).toBe('q-1')
+  })
+
+  it('throws after exhausting retries on persistent malformed JSON', async () => {
+    const q1: PhaseQuestion = {
+      id: 'q-0',
+      question: 'Cache needed?',
+      phaseIndex: 0,
+    }
+    const state = makeState({ pendingQuestions: [q1] })
+    const adapters = makeAdapters(state)
+
+    mockSend.mockResolvedValue({
+      messages: [{ role: 'assistant' as const, content: 'not valid json' }],
+      usage: { inputTokens: 5, outputTokens: 5, totalCostUsd: 0 },
+    })
+
+    await expect(
+      handleResolvePhaseQuestions(task, state, adapters),
+    ).rejects.toThrow('resolve-phase-questions-validation-failed')
+    expect(mockSend).toHaveBeenCalledTimes(3)
   })
 })

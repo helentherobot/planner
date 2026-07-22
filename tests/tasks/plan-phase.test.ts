@@ -62,7 +62,7 @@ function makeSendResult(text = '') {
 describe('handlePlanPhase', () => {
   beforeEach(() => {
     mockSend.mockReset()
-    mockSend.mockResolvedValue(makeSendResult('The plan.'))
+    mockSend.mockResolvedValue(makeSendResult('a'.repeat(900)))
   })
 
   it('sends phaseState.brief when no other phases have a non-empty index', async () => {
@@ -320,5 +320,71 @@ describe('handlePlanPhase', () => {
 
     const [, , messages] = mockSend.mock.calls[0]
     expect(messages[0]).not.toContain('Resolved decisions')
+  })
+
+  it('retry path: first call returns short output, second returns valid', async () => {
+    const LONG_PLAN = 'a'.repeat(900)
+    mockSend.reset ? mockSend.mockReset() : undefined
+    mockSend
+      .mockResolvedValueOnce(makeSendResult('short'))
+      .mockResolvedValueOnce(makeSendResult(LONG_PLAN))
+
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    expect(mockSend).toHaveBeenCalledTimes(2)
+    const storedPhase = store.read()!.phases[0]
+    expect(storedPhase.brief).toBe(LONG_PLAN)
+  })
+
+  it('exhausted retries: all calls return invalid output, throws', async () => {
+    mockSend.mockReset()
+    mockSend.mockResolvedValue(makeSendResult('short'))
+
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await expect(
+      handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters),
+    ).rejects.toThrow('plan-phase-validation-failed')
+    expect(mockSend).toHaveBeenCalledTimes(3)
   })
 })

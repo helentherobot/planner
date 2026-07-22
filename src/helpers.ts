@@ -1,4 +1,10 @@
-import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
+import type {
+  Recipe,
+  Runner,
+  DiscoverableTool,
+  ModelMessage,
+  TextPart,
+} from '@helentherobot/runner'
 import type {
   Store,
   PlanState,
@@ -7,6 +13,7 @@ import type {
   Task,
   Adapters,
   TaskOptions,
+  TaskValidationEntry,
 } from './types.js'
 
 type UsageCtx = {
@@ -173,4 +180,92 @@ export function updateControl(
     ...update,
   }
   store.write(state)
+}
+
+export function validateOutput(
+  entry: TaskValidationEntry | undefined,
+  output: string,
+): { valid: boolean; retryPrompt: string } {
+  if (!entry) return { valid: true, retryPrompt: '' }
+
+  if (entry.type === 'minLength') {
+    const valid = output.length >= entry.value
+    return {
+      valid,
+      retryPrompt: valid
+        ? ''
+        : `The previous response was too short (below the required ` +
+          `minimum of ${entry.value} characters). Produce a thorough, ` +
+          `complete response of at least ${entry.value} characters.`,
+    }
+  }
+
+  if (entry.type === 'minItems') {
+    const lines = output.split('\n').filter((l) => l.trim().length > 0)
+    const valid = lines.length >= entry.value
+    return {
+      valid,
+      retryPrompt: valid
+        ? ''
+        : `The previous response did not produce enough phase titles. ` +
+          `Produce a complete ordered list of implementation phases.`,
+    }
+  }
+
+  if (entry.type === 'schema') {
+    try {
+      const parsed = JSON.parse(output)
+      const missing = entry.required.filter((k) => !(k in parsed))
+      const valid = missing.length === 0
+      return {
+        valid,
+        retryPrompt: valid
+          ? ''
+          : `The previous response did not match the required format. ` +
+            `Return valid JSON containing the required fields: ` +
+            `${entry.required.join(', ')}.`,
+      }
+    } catch {
+      return {
+        valid: false,
+        retryPrompt:
+          `The previous response was not valid JSON. Return a JSON ` +
+          `object containing the required fields: ` +
+          `${entry.required.join(', ')}.`,
+      }
+    }
+  }
+
+  return { valid: true, retryPrompt: '' }
+}
+
+export function extractText(messages: ModelMessage[]): string {
+  const last = messages.at(-1)
+  if (!last) return ''
+  if (typeof last.content === 'string') return last.content
+  if (!Array.isArray(last.content)) return ''
+  return (last.content as TextPart[])
+    .filter((p): p is TextPart => p.type === 'text')
+    .map((p) => p.text)
+    .join('')
+}
+
+export const defaultTaskValidation: Record<string, TaskValidationEntry> = {
+  'gather-recon': { type: 'minLength', value: 500, maxRetries: 2 },
+  'plan-phase': { type: 'minLength', value: 800, maxRetries: 2 },
+  'normalize-phase-plan': { type: 'minLength', value: 200, maxRetries: 2 },
+  'normalize-phase-prompt': { type: 'minLength', value: 300, maxRetries: 2 },
+  'synthesize-phases': { type: 'minItems', value: 1, maxRetries: 2 },
+  'resolve-phase-questions': {
+    type: 'schema',
+    required: ['result'],
+    maxRetries: 2,
+  },
+  'index-phase': { type: 'minLength', value: 10, maxRetries: 2 },
+}
+
+export function mergeTaskValidation(
+  overrides?: Record<string, TaskValidationEntry>,
+): Record<string, TaskValidationEntry> {
+  return { ...defaultTaskValidation, ...overrides }
 }
