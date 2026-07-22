@@ -273,6 +273,7 @@ export const defaultTaskValidation: Record<string, TaskValidationEntry> = {
     required: ['findings'],
     maxRetries: 2,
   },
+  'extract-schema': { type: 'schema', required: ['tables'], maxRetries: 2 },
 }
 
 export function mergeTaskValidation(

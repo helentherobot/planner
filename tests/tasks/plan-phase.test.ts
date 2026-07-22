@@ -322,6 +322,107 @@ describe('handlePlanPhase', () => {
     expect(messages[0]).not.toContain('Resolved decisions')
   })
 
+  it('schemaArtifact set, phase > 0: injects schema into user message', async () => {
+    const SCHEMA = JSON.stringify({
+      tables: [{ name: 'users', columns: [], primaryKeyStyle: 'integer' }],
+    })
+    const phase0 = makePhaseState({ title: 'Phase 0', index: '' })
+    const phase1 = makePhaseState({ title: 'Phase 1', brief: 'Build the API.' })
+    const state = {
+      ...makeState([phase0, phase1]),
+      schemaArtifact: SCHEMA,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 1 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).toContain('Locked schema from Phase 0:')
+    expect(messages[0]).toContain(SCHEMA)
+  })
+
+  it('schemaArtifact null: no schema injected', async () => {
+    const phase = makePhaseState({ brief: 'Build the API.' })
+    const state = {
+      ...makeState([makePhaseState(), phase]),
+      schemaArtifact: null,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 1 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).not.toContain('Locked schema from Phase 0:')
+  })
+
+  it('phase 0: no schema injection even when schemaArtifact is set', async () => {
+    const SCHEMA = JSON.stringify({
+      tables: [{ name: 'users', columns: [], primaryKeyStyle: 'integer' }],
+    })
+    const phase = makePhaseState({ brief: 'Define the schema.' })
+    const state = {
+      ...makeState([phase]),
+      schemaArtifact: SCHEMA,
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+      },
+      controls: [],
+    }
+
+    await handlePlanPhase({ type: 'plan-phase', phase: 0 }, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    expect(messages[0]).not.toContain('Locked schema from Phase 0:')
+  })
+
   it('retry path: first call returns short output, second returns valid', async () => {
     const LONG_PLAN = 'a'.repeat(900)
     mockSend.reset ? mockSend.mockReset() : undefined

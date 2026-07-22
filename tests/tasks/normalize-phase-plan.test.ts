@@ -157,6 +157,105 @@ describe('handleNormalizePhasePlan', () => {
     expect(mockSend).toHaveBeenCalledTimes(3)
   })
 
+  it('schemaFirst true, phase 0: prepends extract-schema to remainingTasks', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+    const phase = makePhaseState()
+    const state = {
+      ...makeState([phase]),
+      remainingTasks: [{ type: 'plan-phase', phase: 0 }],
+    }
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+        schemaFirst: true,
+      },
+      controls: [],
+    }
+
+    const result = await handleNormalizePhasePlan(task, state, adapters)
+
+    expect(result.remainingTasks[0]).toEqual({
+      type: 'extract-schema',
+      phase: 0,
+    })
+    expect(result.remainingTasks[1]).toEqual({ type: 'plan-phase', phase: 0 })
+  })
+
+  it('schemaFirst false: does not inject extract-schema', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+    const phase = makePhaseState()
+    const state = makeState([phase])
+    const store = makeStore(state)
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+        schemaFirst: false,
+      },
+      controls: [],
+    }
+
+    const result = await handleNormalizePhasePlan(task, state, adapters)
+
+    expect(result.remainingTasks.some((t) => t.type === 'extract-schema')).toBe(
+      false,
+    )
+  })
+
+  it('schemaFirst true, phase 1: does not inject extract-schema', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+    const phase = makePhaseState()
+    const state = makeState([phase, phase])
+    const store = makeStore(state)
+    const phase1Task: Task = { type: 'normalize-phase-plan', phase: 1 }
+
+    const adapters: Adapters = {
+      tools: {
+        runner: {} as Adapters['tools']['runner'],
+        profile: 'haiku',
+        cwd: '/tmp',
+        tools: [],
+      },
+      store,
+      observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
+      config: {
+        maxFilesPerPhase: 10,
+        minIterations: 1,
+        maxIterations: 5,
+        schemaFirst: true,
+      },
+      controls: [],
+    }
+
+    const result = await handleNormalizePhasePlan(phase1Task, state, adapters)
+
+    expect(result.remainingTasks.some((t) => t.type === 'extract-schema')).toBe(
+      false,
+    )
+  })
+
   it('calls onUsage after each send', async () => {
     mockSend
       .mockResolvedValueOnce(makeSendResult('x'))

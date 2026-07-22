@@ -48,10 +48,16 @@ export async function handlePlanPhase(
         ].join('\n')
       : ''
 
+  const schemaBlock =
+    state.schemaArtifact && task.phase > 0
+      ? `\n\nLocked schema from Phase 0:\n${state.schemaArtifact}`
+      : ''
+
   const userMessage =
     answeredQuestionsBlock +
     crossPhaseBlock +
-    (phaseState.prompt ?? phaseState.brief)
+    (phaseState.prompt ?? phaseState.brief) +
+    schemaBlock
 
   const sessionOptions = {
     profile: await resolveProfile(adapters, task.type),

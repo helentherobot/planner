@@ -1,33 +1,49 @@
-import type { Task, PlanState } from '../types.js'
+import type { Task, PlanState, SchemaArtifact } from '../types.js'
 import type { Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
-import {
-  resolveProfile,
-  updatePhase,
-  extractText,
-  validateOutput,
-  mergeTaskValidation,
-} from '../helpers.js'
-import { prompt } from '../prompts/normalize-phase-plan/recipe.js'
+import { resolveProfile, extractText, validateOutput } from '../helpers.js'
 
-export async function handleNormalizePhasePlan(
+const systemPrompt = `
+  Extract all database table and column definitions from the provided
+  phase brief. Return a JSON object matching this exact shape:
+  {
+    "tables": [
+      {
+        "name": string,
+        "columns": [
+          { "name": string, "type": string, "primaryKey": boolean }
+        ],
+        "primaryKeyStyle": "integer" | "uuid" | "string" | "unknown"
+      }
+    ]
+  }
+
+  Respond with only the JSON object — no prose, no markdown fences,
+  no explanation. If no tables are defined, return { "tables": [] }.
+`
+
+const validationEntry = {
+  type: 'schema' as const,
+  required: ['tables'],
+  maxRetries: 2,
+}
+
+export async function handleExtractSchema(
   task: Task,
   state: PlanState,
   adapters: Adapters,
 ): Promise<PlanState> {
-  const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
-  const entry = mergedValidation[task.type]
-
-  const phase = task.phase!
-  const phaseState = state.phases[phase]
-  const promptText = prompt({ phase, phaseState })
+  const entry = validationEntry
 
   const sessionOptions = {
-    profile: await resolveProfile(adapters, task.type),
+    profile: await resolveProfile(adapters, 'extract-schema'),
+    systemPrompt,
   }
 
+  const userMessage = state.phases[0].brief
+
   let messages: (import('@helentherobot/runner').ModelMessage | string)[] = [
-    promptText,
+    userMessage,
   ]
 
   let taskStartedAt = Date.now()
@@ -35,7 +51,7 @@ export async function handleNormalizePhasePlan(
   let taskDurationMs = Date.now() - taskStartedAt
 
   adapters.onUsage?.({
-    taskType: task.type,
+    taskType: 'extract-schema',
     inputTokens: result.usage.inputTokens,
     outputTokens: result.usage.outputTokens,
     totalCostUsd: result.usage.totalCostUsd,
@@ -53,7 +69,7 @@ export async function handleNormalizePhasePlan(
   let check = validateOutput(entry, text)
   let retries = 0
 
-  while (!check.valid && retries < (entry?.maxRetries ?? 0)) {
+  while (!check.valid && retries < entry.maxRetries) {
     retries++
     messages = [
       ...result.messages,
@@ -64,7 +80,7 @@ export async function handleNormalizePhasePlan(
     taskDurationMs = Date.now() - taskStartedAt
 
     adapters.onUsage?.({
-      taskType: task.type,
+      taskType: 'extract-schema',
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
       totalCostUsd: result.usage.totalCostUsd,
@@ -82,20 +98,13 @@ export async function handleNormalizePhasePlan(
     check = validateOutput(entry, text)
   }
 
-  if (!check.valid) throw new Error('normalize-phase-plan-validation-failed')
+  if (!check.valid) throw new Error('extract-schema-validation-failed')
 
-  updatePhase(adapters.store, phase, { brief: text })
-  const updatedState = { ...state, phases: adapters.store.read()!.phases }
+  const parsed = JSON.parse(text) as SchemaArtifact
 
-  if (adapters.config.schemaFirst === true && task.phase === 0) {
-    return {
-      ...updatedState,
-      remainingTasks: [
-        { type: 'extract-schema', phase: 0 },
-        ...updatedState.remainingTasks,
-      ],
-    }
+  if (parsed.tables.length === 0) {
+    return { ...state, schemaArtifact: null }
   }
 
-  return updatedState
+  return { ...state, schemaArtifact: JSON.stringify(parsed) }
 }

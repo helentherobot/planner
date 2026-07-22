@@ -18,6 +18,7 @@ import { handleCleanup } from './tasks/cleanup.js'
 import { handleCheckRecon } from './tasks/check-recon.js'
 import { handleCheckSynthesis } from './tasks/check-synthesis.js'
 import { handleCrossPhaseCheck } from './tasks/cross-phase-check.js'
+import { handleExtractSchema } from './tasks/extract-schema.js'
 
 type TaskHandler = (
   task: Task,
@@ -44,6 +45,7 @@ const handlers: Record<string, TaskHandler> = {
   'check-recon': handleCheckRecon,
   'check-synthesis': handleCheckSynthesis,
   'cross-phase-check': handleCrossPhaseCheck,
+  'extract-schema': handleExtractSchema,
 }
 
 export async function drainTasks(
