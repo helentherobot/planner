@@ -6,4 +6,8 @@ export const systemPrompt = `
   thorough plan describing exactly what changes to make, which files to
   touch, and why. Respond in plain text only. Do not use markdown — no
   headings, no bullet points, no bold, no italic, no code fences.
+
+  Your plan must be thorough. Aim for at least 3,000 characters covering
+  every file change, with exact paths, content specifications, and
+  rationale. Short or incomplete plans are not acceptable.
 `
