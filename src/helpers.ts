@@ -268,6 +268,11 @@ export const defaultTaskValidation: Record<string, TaskValidationEntry> = {
     required: ['pass', 'gap'],
     maxRetries: 2,
   },
+  'cross-phase-check': {
+    type: 'schema',
+    required: ['findings'],
+    maxRetries: 2,
+  },
 }
 
 export function mergeTaskValidation(

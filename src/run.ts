@@ -17,6 +17,7 @@ import { handleCollectFeedback } from './tasks/collect-feedback.js'
 import { handleCleanup } from './tasks/cleanup.js'
 import { handleCheckRecon } from './tasks/check-recon.js'
 import { handleCheckSynthesis } from './tasks/check-synthesis.js'
+import { handleCrossPhaseCheck } from './tasks/cross-phase-check.js'
 
 type TaskHandler = (
   task: Task,
@@ -42,6 +43,7 @@ const handlers: Record<string, TaskHandler> = {
   cleanup: handleCleanup,
   'check-recon': handleCheckRecon,
   'check-synthesis': handleCheckSynthesis,
+  'cross-phase-check': handleCrossPhaseCheck,
 }
 
 export async function drainTasks(

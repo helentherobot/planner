@@ -1,4 +1,4 @@
-import type { Task, PlanState } from '../types.js'
+import type { Task, PlanState, CrossPhaseFinding } from '../types.js'
 import type { Adapters } from '../types.js'
 import {
   resolveProfile,
@@ -15,6 +15,10 @@ export async function handleRevisePhase(
 ): Promise<PlanState> {
   const phase = task.phase!
   const phaseState = state.phases[phase]
+  const crossPhaseFinding = task.crossPhaseFinding as
+    | CrossPhaseFinding
+    | undefined
+    | null
 
   const allIssues: string[] = []
   for (const control of adapters.controls) {
@@ -26,14 +30,21 @@ export async function handleRevisePhase(
     }
   }
 
-  if (allIssues.length === 0) {
+  if (allIssues.length === 0 && !crossPhaseFinding) {
     return state
   }
+
+  const wrappedPrompt = crossPhaseFinding
+    ? (ctx: Parameters<typeof prompt>[0]) =>
+        prompt(ctx) +
+        `\n\nAdditionally, resolve this cross-phase contradiction: ` +
+        crossPhaseFinding.description
+    : prompt
 
   const result = await runRecipe(
     adapters.tools.runner,
     await resolveProfile(adapters, task.type),
-    { profile: '', prompt },
+    { profile: '', prompt: wrappedPrompt },
     [
       {
         phase,
