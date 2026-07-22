@@ -15,8 +15,8 @@ describe('types', () => {
   it('Config is exported and assignable', () => {
     const config: Config = {
       maxFilesPerPhase: 10,
-      minimumIterations: 1,
-      maximumIterations: 5,
+      minIterations: 1,
+      maxIterations: 5,
     }
     void config
   })

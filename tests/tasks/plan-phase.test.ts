@@ -81,8 +81,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -109,8 +109,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -141,8 +141,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -177,8 +177,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -210,8 +210,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
       onUsage,
@@ -245,8 +245,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -279,8 +279,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }
@@ -310,8 +310,8 @@ describe('handlePlanPhase', () => {
       observer: { start: vi.fn(), update: vi.fn(), complete: vi.fn() },
       config: {
         maxFilesPerPhase: 10,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       controls: [],
     }

@@ -84,7 +84,12 @@ export async function drainTasks(
       continue
     }
 
-    current = await handler(task, current, adapters)
+    try {
+      current = await handler(task, current, adapters)
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err)
+      return { status: 'failed', reason, state: current }
+    }
     current = {
       ...current,
       completedTasks: [...current.completedTasks, task],

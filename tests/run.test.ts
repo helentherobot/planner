@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { run } from '../src/run.js'
+import { run, drainTasks } from '../src/run.js'
 import type { PlanState, Task } from '../src/types.js'
 import type { Adapters } from '../src/types.js'
 import type { Store } from '../src/types.js'
@@ -50,8 +50,8 @@ function makeAdapters(storeState: PlanState): Adapters {
     observer,
     config: {
       maxFilesPerPhase: 10,
-      minimumIterations: 1,
-      maximumIterations: 5,
+      minIterations: 1,
+      maxIterations: 5,
     },
     controls: [],
   }
@@ -229,5 +229,31 @@ describe('run', () => {
       expect(adapters.observer.complete).not.toHaveBeenCalled()
       expect(result.questions.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('drainTasks — failed status', () => {
+  it('returns { status: failed } when a handler throws', async () => {
+    vi.resetModules()
+    vi.doMock('../src/tasks/cleanup.js', () => ({
+      handleCleanup: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('cleanup-exploded')),
+    }))
+
+    const { drainTasks: freshDrainTasks } = await import('../src/run.js')
+    const task: Task = { type: 'cleanup' }
+    const state = makeState({ remainingTasks: [task] })
+    const adapters = makeAdapters(state)
+
+    const result = await freshDrainTasks(state, adapters)
+
+    expect(result.status).toBe('failed')
+    if (result.status === 'failed') {
+      expect(result.reason).toBe('cleanup-exploded')
+    }
+
+    vi.doUnmock('../src/tasks/cleanup.js')
+    vi.resetModules()
   })
 })

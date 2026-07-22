@@ -60,8 +60,8 @@ describe('handleSplitPhase', () => {
       controls: [],
       config: {
         maxFilesPerPhase: 2,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
     }
 
@@ -95,8 +95,8 @@ describe('handleSplitPhase', () => {
       controls: [],
       config: {
         maxFilesPerPhase: 2,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
     }
 
@@ -133,8 +133,8 @@ describe('handleSplitPhase', () => {
       controls: [],
       config: {
         maxFilesPerPhase: 2,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       onUsage,
     }
@@ -161,8 +161,8 @@ describe('handleSplitPhase', () => {
       controls: [],
       config: {
         maxFilesPerPhase: 2,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
       onUsage,
     }
@@ -192,8 +192,8 @@ describe('handleSplitPhase', () => {
       controls: [],
       config: {
         maxFilesPerPhase: 2,
-        minimumIterations: 1,
-        maximumIterations: 5,
+        minIterations: 1,
+        maxIterations: 5,
       },
     }
 

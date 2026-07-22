@@ -80,5 +80,9 @@ export async function revise(
     )
   }
 
+  if (drainResult.status === 'failed') {
+    throw new Error(drainResult.reason)
+  }
+
   return drainResult.state
 }

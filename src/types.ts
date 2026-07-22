@@ -2,11 +2,39 @@ import type { Recipe, Runner, DiscoverableTool } from '@helentherobot/runner'
 
 export interface Config {
   maxFilesPerPhase: number
-  minimumIterations: number
-  maximumIterations: number
+  minIterations: number
+  maxIterations: number
   taskProfiles?: Record<string, string | (() => string | Promise<string>)>
   /** Maximum tool-call steps per question in resolve-phase-questions. Defaults to 5. */
   maxStepsPerQuestion?: number
+  taskValidation?: Record<string, TaskValidationEntry>
+  taskOptions?: Record<string, TaskOptions>
+  schemaFirst?: boolean
+  maxCrossPhaseIndexLength?: number
+}
+
+export type TaskValidationEntry =
+  | { type: 'minLength'; value: number; maxRetries: number }
+  | { type: 'minItems'; value: number; maxRetries: number }
+  | { type: 'schema'; required: string[]; maxRetries: number }
+
+export interface TaskOptions {
+  jsonMode?: boolean
+}
+
+export interface CrossPhaseFinding {
+  phases: number[]
+  description: string
+}
+
+export interface SchemaArtifactTable {
+  name: string
+  columns: { name: string; type: string; primaryKey?: boolean }[]
+  primaryKeyStyle: 'integer' | 'uuid' | 'string' | 'unknown'
+}
+
+export interface SchemaArtifact {
+  tables: SchemaArtifactTable[]
 }
 
 export interface ControlFinding {
@@ -75,6 +103,7 @@ export interface Answer {
 export type RunResult =
   | { status: 'complete'; state: PlanState }
   | { status: 'needs-answers'; questions: Question[]; state: PlanState }
+  | { status: 'failed'; reason: string; state: PlanState }
 
 export interface RunOptions {
   signal?: AbortSignal
@@ -99,6 +128,19 @@ export interface PlanState {
   awaitingQuestions: Question[]
   answeredQuestions: AnsweredQuestion[]
   pendingQuestions: PhaseQuestion[]
+  // Fix 2 — recon quality loop
+  reconRetries?: number
+  reconStatus?: 'ok' | 'incomplete'
+  reconAmendment?: string | null
+  // Fix 2 — synthesis quality loop
+  synthesisRetries?: number
+  synthesisStatus?: 'ok' | 'incomplete'
+  synthesisAmendment?: string | null
+  // Fix 5 — cross-phase check
+  crossPhaseFindings?: CrossPhaseFinding[]
+  crossPhaseCheckComplete?: boolean
+  // Fix 6 — schema-first planning
+  schemaArtifact?: string | null
 }
 
 export interface OtherPhaseContext {

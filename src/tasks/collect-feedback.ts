@@ -29,14 +29,14 @@ export async function handleCollectFeedback(
   updatePhase(adapters.store, phase, { iterations: nextIterations })
   const updated = adapters.store.read()!
 
-  if (!anyRaised && nextIterations >= adapters.config.minimumIterations) {
+  if (!anyRaised && nextIterations >= adapters.config.minIterations) {
     return {
       ...updated,
       remainingTasks: withoutStalePhaseTasks(state.remainingTasks),
     }
   }
 
-  if (nextIterations >= adapters.config.maximumIterations) {
+  if (nextIterations >= adapters.config.maxIterations) {
     return {
       ...updated,
       remainingTasks: withoutStalePhaseTasks(state.remainingTasks),

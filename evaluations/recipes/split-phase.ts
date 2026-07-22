@@ -87,7 +87,7 @@ const adapters: Adapters = {
     update: async () => {},
     complete: async () => {},
   },
-  config: { maxFilesPerPhase: 8, minimumIterations: 1, maximumIterations: 2 },
+  config: { maxFilesPerPhase: 8, minIterations: 1, maxIterations: 2 },
   controls: [],
 }
 

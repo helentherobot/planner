@@ -178,8 +178,8 @@ const adapters: Adapters = {
   observer,
   config: {
     maxFilesPerPhase: 6,
-    minimumIterations: min,
-    maximumIterations: max,
+    minIterations: min,
+    maxIterations: max,
   },
   controls: defaultControls,
 }

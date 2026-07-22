@@ -6,6 +6,7 @@ import type {
   ControlState,
   Task,
   Adapters,
+  TaskOptions,
 } from './types.js'
 
 type UsageCtx = {
@@ -28,6 +29,17 @@ export async function resolveProfile(
   if (entry !== undefined) return typeof entry === 'function' ? entry() : entry
   if (recipeProfile) return recipeProfile
   return adapters.tools.profile
+}
+
+export function resolveOptions(
+  adapters: {
+    config: {
+      taskOptions?: Record<string, TaskOptions>
+    }
+  },
+  taskType: string,
+): TaskOptions {
+  return adapters.config.taskOptions?.[taskType] ?? {}
 }
 
 export function resolveTools(
