@@ -49,7 +49,7 @@ export async function handlePlanPhase(
       : ''
 
   const schemaBlock =
-    state.schemaArtifact && task.phase > 0
+    state.schemaArtifact && (task.phase ?? 0) > 0
       ? `\n\nLocked schema from Phase 0:\n${state.schemaArtifact}`
       : ''
 
