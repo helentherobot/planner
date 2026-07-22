@@ -104,14 +104,38 @@ describe('handleSynthesizePhases', () => {
     expect(result.phases[2].title).toBe('Phase Three')
   })
 
-  it('expands phases into remaining tasks', async () => {
+  it('prepends check-synthesis to remainingTasks (expandPhases is deferred)', async () => {
     mockSend.mockResolvedValueOnce(makeSendResult('1. Phase One\n2. Phase Two'))
     const adapters = makeAdapters()
 
     const result = await handleSynthesizePhases(task, makeState(), adapters)
 
-    expect(result.remainingTasks.length).toBeGreaterThan(0)
-    expect(result.remainingTasks.some((t) => t.type === 'cleanup')).toBe(true)
+    expect(result.remainingTasks[0].type).toBe('check-synthesis')
+    expect(result.remainingTasks.some((t) => t.type === 'cleanup')).toBe(false)
+  })
+
+  it('appends synthesisAmendment to prompt when set', async () => {
+    const state = makeState({ synthesisAmendment: 'Phase order is wrong' })
+    mockSend.mockResolvedValueOnce(makeSendResult('1. Phase One'))
+    const adapters = makeAdapters()
+
+    await handleSynthesizePhases(task, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    const promptText = messages[0] as string
+    expect(promptText).toContain('Previous synthesis was rejected')
+    expect(promptText).toContain('Phase order is wrong')
+  })
+
+  it('does not append amendment section when synthesisAmendment is null', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult('1. Phase One'))
+    const adapters = makeAdapters()
+
+    await handleSynthesizePhases(task, makeState(), adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    const promptText = messages[0] as string
+    expect(promptText).not.toContain('Previous synthesis was rejected')
   })
 
   it('includes resolved decisions in the prompt sent to send', async () => {

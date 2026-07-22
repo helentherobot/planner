@@ -6,29 +6,47 @@ import {
   resolveTools,
   extractText,
   validateOutput,
-  mergeTaskValidation,
 } from '../helpers.js'
-import { systemPrompt } from '../prompts/gather-recon/system.js'
 
-export async function handleGatherRecon(
+const systemPrompt = `
+  You are verifying the accuracy of a codebase reconnaissance report.
+  Use available tools to inspect the project. For each file path
+  mentioned in the recon, verify it actually exists. Confirm that
+  library and technology claims match what is installed and configured
+  in the project. Identify any relevant areas of the codebase that are
+  absent from the recon.
+
+  Respond with only a JSON object in this exact shape:
+  { "pass": boolean, "gap": string | null }
+
+  Set "pass" to true if the recon is accurate and sufficiently
+  complete. Set "pass" to false if there are material inaccuracies or
+  significant omissions. If "pass" is false, set "gap" to a concise
+  description of what is wrong or missing. If "pass" is true, set
+  "gap" to null. Output only the JSON object — no prose, no markdown.
+`
+
+const validationEntry = {
+  type: 'schema' as const,
+  required: ['pass', 'gap'],
+  maxRetries: 2,
+}
+
+export async function handleCheckRecon(
   task: Task,
   state: PlanState,
   adapters: Adapters,
 ): Promise<PlanState> {
-  const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
-  const entry = mergedValidation[task.type]
+  const entry = validationEntry
 
   const sessionOptions = {
-    profile: await resolveProfile(adapters, task.type),
+    profile: await resolveProfile(adapters, 'check-recon'),
     systemPrompt,
-    tools: resolveTools(adapters, task.type),
+    tools: resolveTools(adapters, 'check-recon'),
     maxSteps: 20,
   }
 
-  const userMessage = state.reconAmendment
-    ? `${state.brief}\n\nPrevious recon was rejected: ` +
-      `${state.reconAmendment}. Address this and produce a corrected recon.`
-    : state.brief
+  const userMessage = `Here is the existing recon:\n\n${state.recon}`
 
   let messages: (import('@helentherobot/runner').ModelMessage | string)[] = [
     userMessage,
@@ -39,7 +57,7 @@ export async function handleGatherRecon(
   let taskDurationMs = Date.now() - taskStartedAt
 
   adapters.onUsage?.({
-    taskType: task.type,
+    taskType: 'check-recon',
     inputTokens: result.usage.inputTokens,
     outputTokens: result.usage.outputTokens,
     totalCostUsd: result.usage.totalCostUsd,
@@ -57,7 +75,7 @@ export async function handleGatherRecon(
   let check = validateOutput(entry, text)
   let retries = 0
 
-  while (!check.valid && retries < (entry?.maxRetries ?? 0)) {
+  while (!check.valid && retries < entry.maxRetries) {
     retries++
     messages = [
       ...result.messages,
@@ -68,7 +86,7 @@ export async function handleGatherRecon(
     taskDurationMs = Date.now() - taskStartedAt
 
     adapters.onUsage?.({
-      taskType: task.type,
+      taskType: 'check-recon',
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
       totalCostUsd: result.usage.totalCostUsd,
@@ -86,11 +104,25 @@ export async function handleGatherRecon(
     check = validateOutput(entry, text)
   }
 
-  if (!check.valid) throw new Error('gather-recon-validation-failed')
+  if (!check.valid) throw new Error('check-recon-validation-failed')
 
-  return {
-    ...state,
-    recon: text,
-    remainingTasks: [{ type: 'check-recon' }, ...state.remainingTasks],
+  const parsed = JSON.parse(text) as { pass: boolean; gap: string | null }
+  const { pass, gap } = parsed
+
+  if (pass) {
+    return { ...state, reconAmendment: null, reconRetries: 0 }
   }
+
+  const reconRetries = (state.reconRetries ?? 0) + 1
+
+  if (reconRetries <= entry.maxRetries) {
+    return {
+      ...state,
+      reconRetries,
+      reconAmendment: gap,
+      remainingTasks: [{ type: 'gather-recon' }, ...state.remainingTasks],
+    }
+  }
+
+  throw new Error('recon-incomplete')
 }

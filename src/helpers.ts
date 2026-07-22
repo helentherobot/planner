@@ -262,6 +262,12 @@ export const defaultTaskValidation: Record<string, TaskValidationEntry> = {
     maxRetries: 2,
   },
   'index-phase': { type: 'minLength', value: 10, maxRetries: 2 },
+  'check-recon': { type: 'schema', required: ['pass', 'gap'], maxRetries: 2 },
+  'check-synthesis': {
+    type: 'schema',
+    required: ['pass', 'gap'],
+    maxRetries: 2,
+  },
 }
 
 export function mergeTaskValidation(

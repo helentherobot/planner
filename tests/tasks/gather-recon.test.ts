@@ -142,6 +142,46 @@ describe('handleGatherRecon', () => {
     )
   })
 
+  it('always prepends check-recon to remainingTasks after success', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+
+    const state = makeState({ remainingTasks: [{ type: 'synthesize-phases' }] })
+    const adapters = makeAdapters()
+
+    const result = await handleGatherRecon(task, state, adapters)
+
+    expect(result.remainingTasks[0].type).toBe('check-recon')
+    expect(result.remainingTasks[1].type).toBe('synthesize-phases')
+  })
+
+  it('appends reconAmendment to the user message when set', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+
+    const state = makeState({ reconAmendment: 'File paths were wrong' })
+    const adapters = makeAdapters()
+
+    await handleGatherRecon(task, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    const userMessage = messages[0] as string
+    expect(userMessage).toContain('Previous recon was rejected')
+    expect(userMessage).toContain('File paths were wrong')
+  })
+
+  it('does not append amendment section when reconAmendment is null', async () => {
+    mockSend.mockResolvedValueOnce(makeSendResult(LONG_TEXT))
+
+    const state = makeState({ reconAmendment: null })
+    const adapters = makeAdapters()
+
+    await handleGatherRecon(task, state, adapters)
+
+    const [, , messages] = mockSend.mock.calls[0]
+    const userMessage = messages[0] as string
+    expect(userMessage).not.toContain('Previous recon was rejected')
+    expect(userMessage).toBe(state.brief)
+  })
+
   it('custom taskValidation overrides default validation threshold', async () => {
     mockSend.mockResolvedValueOnce(makeSendResult('enough'))
 

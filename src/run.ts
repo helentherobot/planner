@@ -15,6 +15,8 @@ import { handleGatherPhaseQuestions } from './tasks/gather-phase-questions.js'
 import { handleResolvePhaseQuestions } from './tasks/resolve-phase-questions.js'
 import { handleCollectFeedback } from './tasks/collect-feedback.js'
 import { handleCleanup } from './tasks/cleanup.js'
+import { handleCheckRecon } from './tasks/check-recon.js'
+import { handleCheckSynthesis } from './tasks/check-synthesis.js'
 
 type TaskHandler = (
   task: Task,
@@ -38,6 +40,8 @@ const handlers: Record<string, TaskHandler> = {
   'revise-phase': handleRevisePhase,
   'collect-feedback': handleCollectFeedback,
   cleanup: handleCleanup,
+  'check-recon': handleCheckRecon,
+  'check-synthesis': handleCheckSynthesis,
 }
 
 export async function drainTasks(

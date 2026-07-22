@@ -3,7 +3,6 @@ import type { Adapters } from '../types.js'
 import { send } from '@helentherobot/runner'
 import {
   resolveProfile,
-  expandPhases,
   extractText,
   validateOutput,
   mergeTaskValidation,
@@ -18,11 +17,17 @@ export async function handleSynthesizePhases(
   const mergedValidation = mergeTaskValidation(adapters.config.taskValidation)
   const entry = mergedValidation[task.type]
 
-  const promptText = prompt({
+  const basePrompt = prompt({
     brief: state.brief,
     recon: state.recon,
     answeredQuestions: state.answeredQuestions,
   })
+
+  const promptText = state.synthesisAmendment
+    ? `${basePrompt}\n\nPrevious synthesis was rejected: ` +
+      `${state.synthesisAmendment}. Address this and produce a corrected ` +
+      `phase list.`
+    : basePrompt
 
   const sessionOptions = {
     profile: await resolveProfile(adapters, task.type),
@@ -98,11 +103,9 @@ export async function handleSynthesizePhases(
     iterations: 0,
   }))
 
-  const phaseTasks = expandPhases(titles)
-
   return {
     ...state,
     phases,
-    remainingTasks: [...phaseTasks, ...state.remainingTasks],
+    remainingTasks: [{ type: 'check-synthesis' }, ...state.remainingTasks],
   }
 }
