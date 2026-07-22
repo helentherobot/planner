@@ -64,6 +64,7 @@ first to preview the changes, then apply with `dry-run:false`.
 ```
 
 Four docs to migrate (dates resolved from git history):
+
 - `001-initial-setup.md`
 - `002-quality-of-life.md`
 - `003-interrogation.md`
@@ -79,9 +80,10 @@ to the user-prompt path), supply the correct `YYYY-MM-DD`.
 ```
 
 The skill will:
+
 - `git mv` each doc to its date-prefixed name.
 - Rename each local branch (`feature/NNN-slug` → `feature/YYYY-MM-DD-
-  slug`).
+slug`).
 - Remove and recreate each worktree under the new branch name (skipping
   any with uncommitted changes).
 - Update any README/index file in `features/` that references the old
@@ -118,10 +120,12 @@ Tests cover renamed fields and the new helper.
 #### 1.1 — Rename Config fields (`src/types.ts`)
 
 In the `Config` interface:
+
 - Rename `minimumIterations` → `minIterations`
 - Rename `maximumIterations` → `maxIterations`
 
 Update every call site:
+
 - `src/tasks/collect-feedback.ts`: two references
   (`adapters.config.minimumIterations`, `adapters.config.maximumIterations`)
 - `tests/tasks/collect-feedback.test.ts`: config fixture
@@ -135,7 +139,7 @@ Add `TaskValidationEntry` discriminated union immediately after the
 ```ts
 export type TaskValidationEntry =
   | { type: 'minLength'; value: number; maxRetries: number }
-  | { type: 'minItems';  value: number; maxRetries: number }
+  | { type: 'minItems'; value: number; maxRetries: number }
   | { type: 'schema'; required: string[]; maxRetries: number }
 ```
 
@@ -306,35 +310,38 @@ export function validateOutput(
     const valid = output.length >= entry.value
     return {
       valid,
-      retryPrompt: valid ? '' :
-        `The previous response was too short (below the required minimum ` +
-        `of ${entry.value} characters). Produce a thorough, complete ` +
-        `response of at least ${entry.value} characters.`,
+      retryPrompt: valid
+        ? ''
+        : `The previous response was too short (below the required minimum ` +
+          `of ${entry.value} characters). Produce a thorough, complete ` +
+          `response of at least ${entry.value} characters.`,
     }
   }
 
   if (entry.type === 'minItems') {
-    const lines = output.split('\n').filter(l => l.trim().length > 0)
+    const lines = output.split('\n').filter((l) => l.trim().length > 0)
     const valid = lines.length >= entry.value
     return {
       valid,
-      retryPrompt: valid ? '' :
-        `The previous response did not produce enough phase titles. ` +
-        `Produce a complete ordered list of implementation phases.`,
+      retryPrompt: valid
+        ? ''
+        : `The previous response did not produce enough phase titles. ` +
+          `Produce a complete ordered list of implementation phases.`,
     }
   }
 
   if (entry.type === 'schema') {
     try {
       const parsed = JSON.parse(output)
-      const missing = entry.required.filter(k => !(k in parsed))
+      const missing = entry.required.filter((k) => !(k in parsed))
       const valid = missing.length === 0
       return {
         valid,
-        retryPrompt: valid ? '' :
-          `The previous response did not match the required format. ` +
-          `Return valid JSON containing the required fields: ` +
-          `${entry.required.join(', ')}.`,
+        retryPrompt: valid
+          ? ''
+          : `The previous response did not match the required format. ` +
+            `Return valid JSON containing the required fields: ` +
+            `${entry.required.join(', ')}.`,
       }
     } catch {
       return {
@@ -363,7 +370,7 @@ export function extractText(messages: ModelMessage[]): string {
   if (typeof last.content === 'string') return last.content
   return last.content
     .filter((p): p is TextPart => p.type === 'text')
-    .map(p => p.text)
+    .map((p) => p.text)
     .join('')
 }
 ```
@@ -375,17 +382,22 @@ Update `gather-recon`, `plan-phase`, and `resolve-phase-questions` to use
 `extractText` in place of their current inline extraction code.
 
 #### 3.3 — Add defaultTaskValidation and mergeTaskValidation
+
 (`src/helpers.ts` or a new `src/defaults.ts`)
 
 ```ts
 export const defaultTaskValidation: Record<string, TaskValidationEntry> = {
-  'gather-recon':            { type: 'minLength', value: 500,  maxRetries: 2 },
-  'plan-phase':              { type: 'minLength', value: 800,  maxRetries: 2 },
-  'normalize-phase-plan':    { type: 'minLength', value: 200,  maxRetries: 2 },
-  'normalize-phase-prompt':  { type: 'minLength', value: 300,  maxRetries: 2 },
-  'synthesize-phases':       { type: 'minItems',  value: 1,    maxRetries: 2 },
-  'resolve-phase-questions': { type: 'schema', required: ['resolutions'], maxRetries: 2 },
-  'index-phase':             { type: 'schema', required: ['files'],        maxRetries: 2 },
+  'gather-recon': { type: 'minLength', value: 500, maxRetries: 2 },
+  'plan-phase': { type: 'minLength', value: 800, maxRetries: 2 },
+  'normalize-phase-plan': { type: 'minLength', value: 200, maxRetries: 2 },
+  'normalize-phase-prompt': { type: 'minLength', value: 300, maxRetries: 2 },
+  'synthesize-phases': { type: 'minItems', value: 1, maxRetries: 2 },
+  'resolve-phase-questions': {
+    type: 'schema',
+    required: ['resolutions'],
+    maxRetries: 2,
+  },
+  'index-phase': { type: 'schema', required: ['files'], maxRetries: 2 },
 }
 
 export function mergeTaskValidation(
@@ -470,6 +482,7 @@ retry inside that loop.
 #### 3.7 — Tests
 
 For each handler that gets validation wiring, add tests covering:
+
 - Normal path: valid output → no retry, returns updated state.
 - Retry path: first call returns invalid output, second returns valid →
   handler retries once, returns updated state.
@@ -488,9 +501,11 @@ three strategy types, valid and invalid cases.
 does not expose a `jsonMode` field.
 
 #### 4.1 — Read taskOptions in handler
+
 (`src/tasks/resolve-phase-questions.ts`)
 
 At the top of the handler:
+
 ```ts
 const opts = resolveOptions(adapters, 'resolve-phase-questions')
 ```
@@ -539,9 +554,11 @@ Both check tasks are agentic (tool-using) calls using the same codebase
 tool set as `gather-recon`.
 
 #### 5.1 — Refactor synthesize-phases to defer expandPhases
+
 (`src/tasks/synthesize-phases.ts`)
 
 Change the handler to:
+
 1. Parse model output and build `state.phases` as before.
 2. Do NOT call `expandPhases`.
 3. Prepend `{ type: 'check-synthesis' }` to `state.remainingTasks`.
@@ -551,6 +568,7 @@ Per-phase task injection now happens inside the `check-synthesis` handler
 when the check passes.
 
 #### 5.2 — Update gather-recon to inject check-recon
+
 (`src/tasks/gather-recon.ts`)
 
 At the end of the handler, after storing `state.recon`, prepend
@@ -566,18 +584,19 @@ and produce a corrected recon.`
 #### 5.3 — Create check-recon handler (`src/tasks/check-recon.ts`)
 
 Logic:
+
 1. Resolve profile: `resolveProfile(adapters, 'check-recon')`.
 2. Resolve validation entry (`{ type: 'schema', required: ['pass', 'gap'],
-   maxRetries: 2 }`).
+maxRetries: 2 }`).
 3. Build user message: inject `state.recon` as context — `Here is the
-   existing recon:\n\n${state.recon}`. Do not include `reconAmendment`
+existing recon:\n\n${state.recon}`. Do not include `reconAmendment`
    in the check prompt — that is for `gather-recon` only.
 4. System prompt instructs the agent to:
    - Verify every file path in `state.recon` actually exists.
    - Confirm library/technology claims match installed/configured packages.
    - Identify relevant areas of the codebase absent from `state.recon`.
    - Respond with only a JSON object: `{ "pass": boolean, "gap":
-     string | null }`.
+string | null }`.
 5. Make an agentic `send()` call with the codebase tools (same tools as
    `gather-recon`, resolved via `resolveTools(adapters, 'check-recon')`
    with fallback to the default tool set).
@@ -596,6 +615,7 @@ Logic:
      `new Error('recon-incomplete')`.
 
 #### 5.4 — Update synthesize-phases to read synthesisAmendment
+
 (`src/tasks/synthesize-phases.ts`)
 
 If `state.synthesisAmendment` is non-null, append to the prompt before
@@ -607,12 +627,14 @@ The retry path only re-queues `synthesize-phases` — `check-synthesis` is
 injected again when that run completes.
 
 #### 5.5 — Create check-synthesis handler
+
 (`src/tasks/check-synthesis.ts`)
 
 Logic mirrors check-recon:
+
 1. Resolve profile: `resolveProfile(adapters, 'check-synthesis')`.
 2. Resolve validation entry (`{ type: 'schema', required: ['pass', 'gap'],
-   maxRetries: 2 }`).
+maxRetries: 2 }`).
 3. Build user message with: brief (`state.brief`), `state.recon`, and
    phase titles (`state.phases.map(p => p.title).join('\n')`).
 4. System prompt instructs the agent to:
@@ -620,7 +642,7 @@ Logic mirrors check-recon:
    - Check that no phase title refers to a non-existent component or path.
    - Confirm phase ordering is logically coherent.
    - Respond with only a JSON object: `{ "pass": boolean, "gap":
-     string | null }`.
+string | null }`.
 5. Agentic `send()` call with codebase tools. Validate and retry on schema
    failure.
 6. Parse `{ pass, gap }`.
@@ -639,6 +661,7 @@ Logic mirrors check-recon:
 #### 5.6 — Register new handlers in run.ts (`src/run.ts`)
 
 Add to `handlers`:
+
 ```ts
 'check-recon':     checkRecon,
 'check-synthesis': checkSynthesis,
@@ -649,6 +672,7 @@ Import from `./tasks/check-recon.js` and `./tasks/check-synthesis.js`.
 #### 5.7 — Update taskValidation defaults
 
 Add to `defaultTaskValidation`:
+
 ```ts
 'check-recon':     { type: 'schema', required: ['pass', 'gap'], maxRetries: 2 },
 'check-synthesis': { type: 'schema', required: ['pass', 'gap'], maxRetries: 2 },
@@ -682,10 +706,11 @@ via the `crossPhaseCheckComplete` flag, feed contradictions back to
 #### 6.1 — Update cleanup handler (`src/tasks/cleanup.ts`)
 
 Change to:
+
 1. If `!(state.crossPhaseCheckComplete ?? false)`:
    - Set `state.crossPhaseCheckComplete = true`.
    - Prepend `{ type: 'cleanup' }` then prepend `{ type: 'cross-phase-
-     check' }` to `state.remainingTasks` (cross-phase-check runs first,
+check' }` to `state.remainingTasks` (cross-phase-check runs first,
      cleanup second).
    - Return state (do not set `completedAt` yet).
 2. If `state.crossPhaseCheckComplete === true`:
@@ -693,6 +718,7 @@ Change to:
    - Return state.
 
 #### 6.2 — Create cross-phase-check handler
+
 (`src/tasks/cross-phase-check.ts`)
 
 1. Filter `state.phases` to those with a non-empty `index` field. If none,
@@ -742,6 +768,7 @@ Add `'cross-phase-check': crossPhaseCheck` to `handlers`. Import from
 #### 6.5 — Update taskValidation defaults
 
 Add:
+
 ```ts
 'cross-phase-check': { type: 'schema', required: ['findings'], maxRetries: 2 },
 ```
@@ -750,7 +777,7 @@ Add:
 
 - `tests/tasks/cleanup.test.ts`:
   - First call (`crossPhaseCheckComplete` falsy): injects `cross-phase-
-    check` and `cleanup` into queue, does NOT set `completedAt`.
+check` and `cleanup` into queue, does NOT set `completedAt`.
   - Second call (`crossPhaseCheckComplete` true): sets `completedAt`.
 - `tests/tasks/cross-phase-check.test.ts`:
   - No phases with index → `crossPhaseFindings = []`, no revise tasks.
@@ -771,6 +798,7 @@ after Phase 0's `normalize-phase-plan`, populate `state.schemaArtifact`,
 and inject it into subsequent `plan-phase` prompts.
 
 #### 7.1 — Update normalize-phase-plan to inject extract-schema
+
 (`src/tasks/normalize-phase-plan.ts`)
 
 After storing `phase.brief`, check both `config.schemaFirst === true` and
@@ -778,6 +806,7 @@ After storing `phase.brief`, check both `config.schemaFirst === true` and
 phase: 0 }` to `state.remainingTasks` before returning.
 
 #### 7.2 — Create extract-schema handler
+
 (`src/tasks/extract-schema.ts`)
 
 1. Resolve profile: `resolveProfile(adapters, 'extract-schema')`.
@@ -792,6 +821,7 @@ phase: 0 }` to `state.remainingTasks` before returning.
 6. Set `state.schemaArtifact = JSON.stringify(parsed)`.
 
 #### 7.3 — Update plan-phase to inject schemaArtifact
+
 (`src/tasks/plan-phase.ts`)
 
 Before building the user message, check `state.schemaArtifact` and
@@ -814,6 +844,7 @@ Add `'extract-schema': extractSchema` to `handlers`. Import from
 #### 7.5 — Update taskValidation defaults
 
 Add:
+
 ```ts
 'extract-schema': { type: 'schema', required: ['tables'], maxRetries: 2 },
 ```
@@ -846,10 +877,13 @@ version matches the git tag.
 #### 8.1 — Update package.json
 
 In `package.json`, change:
+
 ```
 "version": "0.4.1"
 ```
+
 to:
+
 ```
 "version": "0.5.0"
 ```
